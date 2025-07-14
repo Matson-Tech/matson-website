@@ -2,39 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Kerala-inspired design system for Matson Wedding Solutions */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 30 10% 98%;
+    --foreground: 25 15% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 25 15% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 25 15% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Kerala-inspired primary gold */
+    --primary: 42 88% 55%;
+    --primary-foreground: 25 15% 10%;
+    
+    /* Rich Kerala green */
+    --kerala-green: 140 60% 25%;
+    --kerala-green-foreground: 0 0% 98%;
+    
+    /* Warm earth tones */
+    --earth-warm: 25 45% 65%;
+    --earth-deep: 20 25% 20%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 42 25% 90%;
+    --secondary-foreground: 25 15% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 15% 92%;
+    --muted-foreground: 25 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 42 88% 55%;
+    --accent-foreground: 25 15% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 350 75% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 42 88% 55%;
+
+    --radius: 0.75rem;
+
+    /* Custom gradients for Kerala wedding theme */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--kerala-green)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--kerala-green) / 0.1));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--primary) / 0.05));
+    
+    /* Elegant shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.2);
+    --shadow-soft: 0 4px 12px -2px hsl(var(--foreground) / 0.1);
+    
+    /* Smooth animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
 
@@ -101,5 +123,62 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Hero section with Kerala-inspired styling */
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  /* Elegant card styling */
+  .card-elegant {
+    @apply bg-card/80 backdrop-blur-sm border-border/50 shadow-lg;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+  
+  /* Kerala-themed buttons */
+  .btn-kerala {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg;
+    transition: var(--transition-smooth);
+  }
+  
+  .btn-kerala-outline {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground;
+    transition: var(--transition-smooth);
+  }
+  
+  /* Floating animation for elements */
+  .float-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  /* Scale hover effect */
+  .hover-scale {
+    @apply transition-smooth hover:scale-105;
+  }
+  
+  /* Text gradient effect */
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
