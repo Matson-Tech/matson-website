@@ -1,89 +1,116 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Heart, Sparkles } from 'lucide-react';
+import { Menu, X, Search, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import matsonIcon from '../assets/matson-icon.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
-    { name: 'Home', path: '/' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Services', path: '/services' },
-    { name: 'Gallery', path: '/gallery' },
-    // { name: 'Testimonials', path: '/testimonials' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'Plan your wedding', path: '/services', hasDropdown: true },
+    { name: 'Expert advice', path: '/about' },
+    { name: 'Find a couple', path: '/gallery' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-card/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center group">
-            <img 
-              src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
-              alt="Matson Cards" 
-              className="h-12 w-auto object-contain group-hover:scale-105 transition-smooth" 
-            />
-          </Link>
+    <>
+      {/* Top banner */}
+      <div className="bg-primary text-primary-foreground py-2 px-4 text-sm text-center">
+        <span className="font-medium">Matson Baby</span>
+        <span className="mx-4">Matson Home</span>
+        <span>Matson for vendors</span>
+      </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`text-sm font-medium transition-smooth hover:text-primary ${
-                  isActive(item.path) ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-            <Button variant="outline" className="mr-2">Log in</Button>
-            <Button className="bg-matson-black hover:bg-matson-black/90 text-white rounded-full px-6">Get started</Button>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2"
-            >
-              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden border-t border-border/50 py-4 animate-fade-in">
-            <div className="flex flex-col space-y-3">
+      <nav className="bg-white border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            {/* Left Navigation */}
+            <div className="hidden lg:flex items-center space-x-8">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={`text-sm font-medium py-2 px-4 rounded-md transition-smooth hover:bg-muted ${
-                    isActive(item.path) ? 'text-primary bg-muted' : 'text-muted-foreground'
-                  }`}
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                    isActive(item.path) ? 'text-primary' : 'text-foreground'
+                  } ${item.hasDropdown ? 'flex items-center' : ''}`}
                 >
                   {item.name}
+                  {item.hasDropdown && <span className="ml-1">▼</span>}
                 </Link>
               ))}
-              <Button className="bg-matson-black hover:bg-matson-black/90 text-white rounded-full px-6 mx-4 mt-2">Get started</Button>
+            </div>
+
+            {/* Logo - Centered */}
+            <Link to="/" className="flex items-center group">
+              <img 
+                src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
+                alt="Matson Cards" 
+                className="h-14 w-auto object-contain group-hover:scale-105 transition-smooth" 
+              />
+            </Link>
+
+            {/* Right Navigation */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <Button variant="ghost" size="sm" className="p-2">
+                <Search className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="p-2">
+                <ShoppingCart className="w-5 h-5" />
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full">
+                Log in
+              </Button>
+              <Button size="sm" className="bg-matson-black hover:bg-matson-black/90 text-white rounded-full px-6">
+                Get started
+              </Button>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="lg:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(!isOpen)}
+                className="p-2"
+              >
+                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-    </nav>
+
+          {/* Mobile Navigation */}
+          {isOpen && (
+            <div className="lg:hidden border-t border-border py-4">
+              <div className="flex flex-col space-y-3">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className={`text-sm font-medium py-2 px-4 rounded-md transition-colors hover:bg-muted ${
+                      isActive(item.path) ? 'text-primary bg-muted' : 'text-foreground'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                <div className="px-4 pt-4 space-y-2">
+                  <Button variant="outline" className="w-full rounded-full">
+                    Log in
+                  </Button>
+                  <Button className="w-full bg-matson-black hover:bg-matson-black/90 text-white rounded-full">
+                    Get started
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+    </>
   );
 };
 

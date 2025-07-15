@@ -1,202 +1,178 @@
 import { useState } from 'react';
-import { Eye, Filter, Heart, Star, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Heart, Search, Filter } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 const Gallery = () => {
-  const [activeFilter, setActiveFilter] = useState('all');
-
-  const filters = [
-    { id: 'all', label: 'All Designs', count: 48 },
-    { id: 'cards', label: 'Wedding Cards', count: 25 },
-    { id: 'websites', label: 'Websites', count: 15 },
-    { id: 'premium', label: 'Premium', count: 8 },
-  ];
-
-  const galleryItems = [
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  
+  const categories = ['All', 'Hindu', 'Christian', 'Muslim', 'Modern', 'Traditional'];
+  
+  const templates = [
     {
       id: 1,
-      type: 'cards',
-      title: 'Traditional Kerala Hindu Wedding Card',
-      category: 'Premium Collection',
-      price: '₹35',
-      tags: ['Traditional', 'Gold Foil', 'Hindu'],
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&h=300&fit=crop',
-      likes: 124,
-      views: 2341
+      name: 'Kerala Traditional',
+      category: 'Hindu',
+      price: '₹15',
+      image: '/placeholder.svg',
+      popular: true,
+      description: 'Classic Kerala Hindu wedding design with traditional motifs'
     },
     {
       id: 2,
-      type: 'websites',
-      title: 'Elegant Christian Wedding Website',
-      category: 'Website Template',
-      price: 'Free',
-      tags: ['Modern', 'Christian', 'Photo Gallery'],
-      image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=500&h=300&fit=crop',
-      likes: 89,
-      views: 1876
+      name: 'Christian Elegance',
+      category: 'Christian',
+      price: '₹12',
+      image: '/placeholder.svg',
+      popular: false,
+      description: 'Modern Christian wedding invitation with elegant typography'
     },
     {
       id: 3,
-      type: 'cards',
-      title: 'Minimalist Muslim Wedding Invitation',
-      category: 'Starter Collection',
-      price: '₹15',
-      tags: ['Minimalist', 'Muslim', 'Elegant'],
-      image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=500&h=300&fit=crop',
-      likes: 156,
-      views: 3124
+      name: 'Islamic Harmony',
+      category: 'Muslim',
+      price: '₹18',
+      image: '/placeholder.svg',
+      popular: true,
+      description: 'Beautiful Islamic calligraphy with contemporary design'
     },
     {
       id: 4,
-      type: 'websites',
-      title: 'Kerala Traditional Wedding Portal',
-      category: 'Website Template',
-      price: 'Free',
-      tags: ['Traditional', 'Interactive', 'RSVP'],
-      image: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=500&h=300&fit=crop',
-      likes: 203,
-      views: 4567
+      name: 'Modern Minimalist',
+      category: 'Modern',
+      price: '₹10',
+      image: '/placeholder.svg',
+      popular: false,
+      description: 'Clean, modern design perfect for contemporary couples'
     },
     {
       id: 5,
-      type: 'premium',
-      title: 'Luxury Boxed Wedding Suite',
-      category: 'Premium Collection',
-      price: '₹50',
-      tags: ['Luxury', 'Boxed', 'Multi-faith'],
-      image: 'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=500&h=300&fit=crop',
-      likes: 98,
-      views: 1987
+      name: 'Royal Kerala',
+      category: 'Traditional',
+      price: '₹25',
+      image: '/placeholder.svg',
+      popular: true,
+      description: 'Luxurious traditional design with gold accents'
     },
     {
       id: 6,
-      type: 'cards',
-      title: 'Eco-Friendly Wedding Card',
-      category: 'Eco Collection',
-      price: '₹20',
-      tags: ['Eco-friendly', 'Recycled', 'Natural'],
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=500&h=300&fit=crop',
-      likes: 167,
-      views: 2890
+      name: 'Garden Romance',
+      category: 'Modern',
+      price: '₹14',
+      image: '/placeholder.svg',
+      popular: false,
+      description: 'Floral themed design with romantic watercolor elements'
     }
   ];
 
-  const filteredItems = activeFilter === 'all' 
-    ? galleryItems 
-    : galleryItems.filter(item => item.type === activeFilter);
+  const filteredTemplates = selectedCategory === 'All' 
+    ? templates 
+    : templates.filter(template => template.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-24 hero-gradient">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h1 className="text-5xl font-bold">Design Gallery</h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Explore our stunning collection of wedding cards and website templates, crafted with love for Kerala couples
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-serif font-medium mb-6">
+              Wedding invitation templates
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+              Choose from our collection of beautifully designed templates. Each design celebrates Kerala's rich cultural heritage.
             </p>
+            
+            <div className="flex justify-center">
+              <div className="relative max-w-md w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search templates..."
+                  className="w-full pl-10 pr-4 py-3 border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Filter Section */}
-      <section className="py-8 border-b border-border/50">
+      {/* Filters */}
+      <section className="py-8 border-b border-border">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-4">
-            {filters.map((filter) => (
+          <div className="flex flex-wrap justify-center gap-3">
+            {categories.map((category) => (
               <Button
-                key={filter.id}
-                variant={activeFilter === filter.id ? 'default' : 'outline'}
-                onClick={() => setActiveFilter(filter.id)}
-                className={`${
-                  activeFilter === filter.id ? 'btn-kerala' : 'btn-kerala-outline'
-                } group`}
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                onClick={() => setSelectedCategory(category)}
+                className="rounded-full px-6"
               >
-                <Filter className="w-4 h-4 mr-2" />
-                {filter.label}
-                <Badge 
-                  variant="secondary" 
-                  className="ml-2 bg-background/50 text-foreground group-hover:bg-background"
-                >
-                  {filter.count}
-                </Badge>
+                {category}
               </Button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Gallery Grid */}
-      <section className="py-16">
+      {/* Templates Grid */}
+      <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="card-elegant group overflow-hidden hover-scale">
-                {/* Image */}
-                <div className="relative overflow-hidden">
+            {filteredTemplates.map((template) => (
+              <Card key={template.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md">
+                <div className="aspect-[3/4] relative overflow-hidden">
                   <img 
-                    src={item.image} 
-                    alt={item.title}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-smooth"
+                    src={template.image} 
+                    alt={template.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-smooth">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <Button size="sm" className="btn-kerala w-full">
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
                   
-                  {/* Category Badge */}
-                  <Badge className="absolute top-4 left-4 bg-card/90 text-foreground border-border/50">
-                    {item.category}
-                  </Badge>
-                  
-                  {/* Price */}
-                  <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
-                    {item.price}
-                  </Badge>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold group-hover:text-primary transition-smooth">
-                      {item.title}
-                    </h3>
-                    
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      {item.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Heart className="w-4 h-4" />
-                        <span>{item.likes}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{item.views}</span>
-                      </div>
-                    </div>
-                    
-                    {item.type === 'websites' && (
-                      <div className="flex items-center space-x-1 text-accent">
-                        <Globe className="w-4 h-4" />
-                        <span>Live Demo</span>
-                      </div>
+                  {/* Overlay content */}
+                  <div className="absolute top-4 left-4 flex gap-2">
+                    {template.popular && (
+                      <Badge className="bg-primary text-primary-foreground">
+                        Popular
+                      </Badge>
                     )}
+                    <Badge variant="secondary" className="bg-white/90 text-foreground">
+                      {template.category}
+                    </Badge>
+                  </div>
+                  
+                  <div className="absolute top-4 right-4">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="w-8 h-8 p-0 rounded-full bg-white/90 hover:bg-white"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Button className="w-full rounded-full bg-white text-foreground hover:bg-white/90">
+                      Preview & Customize
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-serif font-medium">{template.name}</h3>
+                    <span className="text-lg font-bold text-primary">{template.price}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1 rounded-full">
+                      Quick view
+                    </Button>
+                    <Button className="flex-1 rounded-full">
+                      Select
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -205,39 +181,22 @@ const Gallery = () => {
         </div>
       </section>
 
-      {/* Load More */}
-      <section className="py-8 text-center">
-        <div className="container mx-auto px-4">
-          <Button size="lg" variant="outline" className="btn-kerala-outline">
-            Load More Designs
+      {/* Bottom CTA */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-serif font-medium mb-4">
+            Need something custom?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Our design team can create a completely custom invitation just for you. Starting from ₹50.
+          </p>
+          <Button size="lg" className="rounded-full px-8">
+            Request custom design
           </Button>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 bg-muted/50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold">Ready to Create Your Own?</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Join thousands of couples who've chosen Matson for their special day. Start designing your perfect wedding cards or website today.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="btn-kerala">
-                <Star className="w-5 h-5 mr-2" />
-                Start Designing Cards
-              </Button>
-              <Button size="lg" variant="outline" className="btn-kerala-outline">
-                <Globe className="w-5 h-5 mr-2" />
-                Build Your Website
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Footer />
     </div>
   );
 };
