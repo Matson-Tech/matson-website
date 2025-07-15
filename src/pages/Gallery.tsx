@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Search } from 'lucide-react';
 import Footer from '@/components/Footer';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Dynamically import all images from cards subfolders
 const imageModules = import.meta.glob('@/assets/cards/*/*.{jpg,png,jpeg,svg}', { eager: true, import: 'default' });
 
 // Group images by folder (model)
-const groupedTemplates: Record<string, { images: string[]; category: string; price: string; popular: boolean; description: string }> = {};
+const groupedTemplates: Record<string, { images: { src: string; fileName: string }[]; category: string; price: string; popular: boolean; description: string }> = {};
 Object.entries(imageModules).forEach(([path, src]) => {
   const match = path.match(/cards\/(\d+)\/(.+)$/);
   const model = match ? match[1] : 'Unknown';
@@ -23,7 +24,7 @@ Object.entries(imageModules).forEach(([path, src]) => {
       description: `Model ${model}`,
     };
   }
-  groupedTemplates[model].images.push(src as string);
+  groupedTemplates[model].images.push({ src: src as string, fileName: filename });
 });
 
 const templates = Object.entries(groupedTemplates).map(([model, data], idx) => ({
@@ -44,43 +45,52 @@ const Gallery = () => {
     });
     return initial;
   });
+  // Track which carousels are hovered (by card hover)
+  const [hovered, setHovered] = useState<{ [key: string]: boolean }>({});
   // Track which carousels are paused (by dot hover)
   const [paused, setPaused] = useState<{ [key: string]: boolean }>({});
+  // Store random intervals for each card
+  const [intervals, setIntervals] = useState<{ [key: string]: number }>({});
 
-  // --- Zoom state for desktop ---
-  const [zoomLevels, setZoomLevels] = useState<{ [key: string]: number }>({});
-  const maxZoom = 2.5;
-  const minZoom = 1;
-  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
-
-  // Reset zoom on click anywhere (desktop only)
+  // Generate random intervals for each card on mount
   useEffect(() => {
-    if (!isDesktop) return;
-    const handleClick = (e: MouseEvent) => {
-      setZoomLevels({});
+    const newIntervals: { [key: string]: number } = {};
+    templates.forEach((t) => {
+      // Random interval between 5000ms and 9000ms
+      newIntervals[t.category] = 5000 + Math.floor(Math.random() * 4000);
+    });
+    setIntervals(newIntervals);
+  }, [templates.length]);
+
+  // Set up interval to auto-advance images for each card
+  useEffect(() => {
+    const timers: { [key: string]: NodeJS.Timeout } = {};
+    templates.forEach((t) => {
+      const cat = t.category;
+      // If paused by dot hover, do nothing
+      if (paused[cat]) return;
+      // If hovered, use 5s interval
+      if (hovered[cat]) {
+        timers[cat] = setInterval(() => {
+          setCarouselIndexes((prev) => ({
+            ...prev,
+            [cat]: ((prev[cat] || 0) + 1) % t.images.length,
+          }));
+        }, 5000);
+      } else {
+        // Use random interval for each card
+        timers[cat] = setInterval(() => {
+          setCarouselIndexes((prev) => ({
+            ...prev,
+            [cat]: ((prev[cat] || 0) + 1) % t.images.length,
+          }));
+        }, intervals[cat] || 6000);
+      }
+    });
+    return () => {
+      Object.values(timers).forEach(clearInterval);
     };
-    window.addEventListener('mousedown', handleClick);
-    return () => window.removeEventListener('mousedown', handleClick);
-  }, [isDesktop]);
-
-  // Set up interval to auto-advance images every 5 seconds, unless paused
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCarouselIndexes((prev) => {
-        const updated: { [key: string]: number } = {};
-        templates.forEach((t) => {
-          if (paused[t.category]) {
-            updated[t.category] = prev[t.category] || 0;
-          } else {
-            const currentIdx = prev[t.category] || 0;
-            updated[t.category] = (currentIdx + 1) % t.images.length;
-          }
-        });
-        return updated;
-      });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [templates, paused]);
+  }, [templates, hovered, paused, intervals]);
 
   const filteredTemplates = selectedCategory === 'All'
     ? templates
@@ -136,34 +146,24 @@ const Gallery = () => {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredTemplates.map((template) => (
-              <Card key={template.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md">
+              <Card
+                key={template.id}
+                className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md"
+                onMouseEnter={() => setHovered((prev) => ({ ...prev, [template.category]: true }))}
+                onMouseLeave={() => setHovered((prev) => ({ ...prev, [template.category]: false }))}
+              >
                 <div className="aspect-[3/4] relative overflow-hidden">
-                  <img 
-                    src={template.images[carouselIndexes[template.category] || 0]} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    style={isDesktop && zoomLevels[template.category] ? { transform: `scale(${zoomLevels[template.category]})` } : {}}
-                    onWheel={isDesktop ? (e) => {
-                      e.preventDefault();
-                      setZoomLevels((prev) => {
-                        const current = prev[template.category] || 1;
-                        let next = current;
-                        if (e.deltaY < 0) {
-                          // Scroll up: zoom in
-                          next = Math.min(current + 0.1, maxZoom);
-                        } else if (e.deltaY > 0) {
-                          // Scroll down: zoom out
-                          next = Math.max(current - 0.1, minZoom);
-                        }
-                        // If zoomed out to original size, remove zoom
-                        if (next === 1) {
-                          const { [template.category]: _, ...rest } = prev;
-                          return rest;
-                        }
-                        return { ...prev, [template.category]: next };
-                      });
-                    } : undefined}
-                    onClick={undefined} // Prevent image click from resetting zoom (handled globally)
-                  />
+                  <AnimatePresence initial={false} custom={carouselIndexes[template.category]}>
+                    <motion.img
+                      key={carouselIndexes[template.category] || 0}
+                      src={template.images[carouselIndexes[template.category] || 0].src}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0"
+                      initial={{ x: 100, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -100, opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </AnimatePresence>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
                   {/* Overlay content */}
                   <div className="absolute top-4 left-4 flex gap-2">

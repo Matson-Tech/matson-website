@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Globe, Calendar, Users, Star, ArrowRight, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Index = () => {
   const services = [
@@ -45,40 +46,56 @@ const Index = () => {
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
-                <Card key={index} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
-                    <img 
-                      src={service.image} 
-                      alt={service.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/20"></div>
-                    <div className="absolute top-4 left-4">
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-primary" />
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  className="hover-scale"
+                >
+                  <Card className="overflow-hidden card-elegant group border-0 shadow-md hover:shadow-2xl hover:scale-[1.03] transition-all">
+                    <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden">
+                      <img 
+                        src={service.image} 
+                        alt={service.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute top-4 left-4">
+                        <motion.div
+                          whileHover={{ scale: 1.15, rotate: 8 }}
+                          transition={{ type: 'spring', stiffness: 300 }}
+                          className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg"
+                        >
+                          <Icon className="w-6 h-6 text-primary" />
+                        </motion.div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <h3 className="text-xl font-serif font-medium mb-3">{service.title}</h3>
-                    <p className="text-muted-foreground mb-4">{service.description}</p>
-                    
-                    <div className="space-y-2 mb-6">
-                      {service.features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center text-sm text-muted-foreground">
-                          <CheckCircle className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
-                          {feature}
-                        </div>
-                      ))}
+                    <div className="p-6">
+                      <h3 className="text-xl font-serif font-medium mb-3">{service.title}</h3>
+                      <p className="text-muted-foreground mb-4">{service.description}</p>
+                      <div className="space-y-2 mb-6">
+                        {service.features.map((feature, idx) => (
+                          <div key={idx} className="flex items-center text-sm text-muted-foreground">
+                            <motion.span
+                              whileHover={{ scale: 1.2, color: "#D72660" }}
+                              transition={{ type: 'spring', stiffness: 400 }}
+                              className="mr-2 flex-shrink-0"
+                            >
+                              <CheckCircle className="w-4 h-4 text-primary" />
+                            </motion.span>
+                            {feature}
+                          </div>
+                        ))}
+                      </div>
+                      <Button className="w-full rounded-full btn-kerala-outline bg-gradient-to-r from-primary to-accent text-white hover:from-accent hover:to-primary transition-all">
+                        Learn more
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
                     </div>
-                    
-                    <Button className="w-full rounded-full" variant="outline">
-                      Learn more
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </Card>
+                  </Card>
+                </motion.div>
               );
             })}
           </div>
