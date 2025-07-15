@@ -52,14 +52,10 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// Kerala-inspired custom colors
-				kerala: {
-					green: 'hsl(var(--kerala-green))',
-					'green-foreground': 'hsl(var(--kerala-green-foreground))'
-				},
-				earth: {
-					warm: 'hsl(var(--earth-warm))',
-					deep: 'hsl(var(--earth-deep))'
+				// Matson brand colors
+				matson: {
+					black: 'hsl(var(--matson-black))',
+					'black-foreground': 'hsl(var(--matson-black-foreground))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

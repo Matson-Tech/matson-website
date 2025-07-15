@@ -24,13 +24,12 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="relative">
-              <Heart className="w-8 h-8 text-primary group-hover:scale-110 transition-smooth" />
-              <Sparkles className="w-4 h-4 text-accent absolute -top-1 -right-1 group-hover:animate-pulse" />
-            </div>
-            
-            <img src={matsonIcon} alt="Matson Logo" className="w-20 h-20 object-contain" />
+          <Link to="/" className="flex items-center group">
+            <img 
+              src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
+              alt="Matson Cards" 
+              className="h-10 w-auto object-contain group-hover:scale-105 transition-smooth" 
+            />
           </Link>
 
           {/* Desktop Navigation */}
