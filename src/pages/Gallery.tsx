@@ -1,74 +1,89 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Search, Filter } from 'lucide-react';
+import { Heart, Search } from 'lucide-react';
 import Footer from '@/components/Footer';
+
+// Dynamically import all images from cards subfolders
+const imageModules = import.meta.glob('@/assets/cards/*/*.{jpg,png,jpeg,svg}', { eager: true, import: 'default' });
+
+// Group images by folder (model)
+const groupedTemplates: Record<string, { images: string[]; category: string; price: string; popular: boolean; description: string }> = {};
+Object.entries(imageModules).forEach(([path, src]) => {
+  const match = path.match(/cards\/(\d+)\/(.+)$/);
+  const model = match ? match[1] : 'Unknown';
+  const filename = match ? match[2] : 'Image';
+  if (!groupedTemplates[model]) {
+    groupedTemplates[model] = {
+      images: [],
+      category: model,
+      price: '₹15',
+      popular: false,
+      description: `Model ${model}`,
+    };
+  }
+  groupedTemplates[model].images.push(src as string);
+});
+
+const templates = Object.entries(groupedTemplates).map(([model, data], idx) => ({
+  id: idx + 1,
+  name: `Model ${model}`,
+  ...data,
+}));
+
+const categories = ['All', ...Array.from(new Set(templates.map(t => t.category)))];
 
 const Gallery = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  
-  const categories = ['All', 'Hindu', 'Christian', 'Muslim', 'Modern', 'Traditional'];
-  
-  const templates = [
-    {
-      id: 1,
-      name: 'Kerala Traditional',
-      category: 'Hindu',
-      price: '₹15',
-      image: '/placeholder.svg',
-      popular: true,
-      description: 'Classic Kerala Hindu wedding design with traditional motifs'
-    },
-    {
-      id: 2,
-      name: 'Christian Elegance',
-      category: 'Christian',
-      price: '₹12',
-      image: '/placeholder.svg',
-      popular: false,
-      description: 'Modern Christian wedding invitation with elegant typography'
-    },
-    {
-      id: 3,
-      name: 'Islamic Harmony',
-      category: 'Muslim',
-      price: '₹18',
-      image: '/placeholder.svg',
-      popular: true,
-      description: 'Beautiful Islamic calligraphy with contemporary design'
-    },
-    {
-      id: 4,
-      name: 'Modern Minimalist',
-      category: 'Modern',
-      price: '₹10',
-      image: '/placeholder.svg',
-      popular: false,
-      description: 'Clean, modern design perfect for contemporary couples'
-    },
-    {
-      id: 5,
-      name: 'Royal Kerala',
-      category: 'Traditional',
-      price: '₹25',
-      image: '/placeholder.svg',
-      popular: true,
-      description: 'Luxurious traditional design with gold accents'
-    },
-    {
-      id: 6,
-      name: 'Garden Romance',
-      category: 'Modern',
-      price: '₹14',
-      image: '/placeholder.svg',
-      popular: false,
-      description: 'Floral themed design with romantic watercolor elements'
-    }
-  ];
+  // For each card, track the current image index
+  const [carouselIndexes, setCarouselIndexes] = useState<{ [key: string]: number }>(() => {
+    const initial: { [key: string]: number } = {};
+    templates.forEach((t) => {
+      initial[t.category] = 0;
+    });
+    return initial;
+  });
+  // Track which carousels are paused (by dot hover)
+  const [paused, setPaused] = useState<{ [key: string]: boolean }>({});
 
-  const filteredTemplates = selectedCategory === 'All' 
-    ? templates 
+  // --- Zoom state for desktop ---
+  const [zoomLevels, setZoomLevels] = useState<{ [key: string]: number }>({});
+  const maxZoom = 2.5;
+  const minZoom = 1;
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+
+  // Reset zoom on click anywhere (desktop only)
+  useEffect(() => {
+    if (!isDesktop) return;
+    const handleClick = (e: MouseEvent) => {
+      setZoomLevels({});
+    };
+    window.addEventListener('mousedown', handleClick);
+    return () => window.removeEventListener('mousedown', handleClick);
+  }, [isDesktop]);
+
+  // Set up interval to auto-advance images every 5 seconds, unless paused
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCarouselIndexes((prev) => {
+        const updated: { [key: string]: number } = {};
+        templates.forEach((t) => {
+          if (paused[t.category]) {
+            updated[t.category] = prev[t.category] || 0;
+          } else {
+            const currentIdx = prev[t.category] || 0;
+            updated[t.category] = (currentIdx + 1) % t.images.length;
+          }
+        });
+        return updated;
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [templates, paused]);
+
+  const filteredTemplates = selectedCategory === 'All'
+    ? templates
     : templates.filter(template => template.category === selectedCategory);
 
   return (
@@ -83,7 +98,6 @@ const Gallery = () => {
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
               Choose from our collection of beautifully designed templates. Each design celebrates Kerala's rich cultural heritage.
             </p>
-            
             <div className="flex justify-center">
               <div className="relative max-w-md w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -91,6 +105,7 @@ const Gallery = () => {
                   type="text"
                   placeholder="Search templates..."
                   className="w-full pl-10 pr-4 py-3 border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
+                  // Search logic can be added here
                 />
               </div>
             </div>
@@ -124,12 +139,32 @@ const Gallery = () => {
               <Card key={template.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md">
                 <div className="aspect-[3/4] relative overflow-hidden">
                   <img 
-                    src={template.image} 
-                    alt={template.name}
+                    src={template.images[carouselIndexes[template.category] || 0]} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    style={isDesktop && zoomLevels[template.category] ? { transform: `scale(${zoomLevels[template.category]})` } : {}}
+                    onWheel={isDesktop ? (e) => {
+                      e.preventDefault();
+                      setZoomLevels((prev) => {
+                        const current = prev[template.category] || 1;
+                        let next = current;
+                        if (e.deltaY < 0) {
+                          // Scroll up: zoom in
+                          next = Math.min(current + 0.1, maxZoom);
+                        } else if (e.deltaY > 0) {
+                          // Scroll down: zoom out
+                          next = Math.max(current - 0.1, minZoom);
+                        }
+                        // If zoomed out to original size, remove zoom
+                        if (next === 1) {
+                          const { [template.category]: _, ...rest } = prev;
+                          return rest;
+                        }
+                        return { ...prev, [template.category]: next };
+                      });
+                    } : undefined}
+                    onClick={undefined} // Prevent image click from resetting zoom (handled globally)
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
-                  
                   {/* Overlay content */}
                   <div className="absolute top-4 left-4 flex gap-2">
                     {template.popular && (
@@ -141,7 +176,6 @@ const Gallery = () => {
                       {template.category}
                     </Badge>
                   </div>
-                  
                   <div className="absolute top-4 right-4">
                     <Button
                       size="sm"
@@ -151,21 +185,33 @@ const Gallery = () => {
                       <Heart className="w-4 h-4" />
                     </Button>
                   </div>
-                  
                   <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button className="w-full rounded-full bg-white text-foreground hover:bg-white/90">
-                      Preview & Customize
-                    </Button>
+                    {/* Preview button removed */}
+                  </div>
+                  {/* Dots for carousel */}
+                  <div
+                    className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-10"
+                    onMouseLeave={() => setPaused((prev) => ({ ...prev, [template.category]: false }))}
+                  >
+                    {template.images.map((_, imgIdx) => (
+                      <button
+                        key={imgIdx}
+                        className={`w-2.5 h-2.5 rounded-full border border-white transition-all duration-200 ${carouselIndexes[template.category] === imgIdx ? 'bg-white' : 'bg-white/50'}`}
+                        style={{ outline: carouselIndexes[template.category] === imgIdx ? '2px solid #6366f1' : 'none' }}
+                        onMouseEnter={() => {
+                          setCarouselIndexes((prev) => ({ ...prev, [template.category]: imgIdx }));
+                          setPaused((prev) => ({ ...prev, [template.category]: true }));
+                        }}
+                        aria-label={`Show image ${imgIdx + 1}`}
+                        type="button"
+                      />
+                    ))}
                   </div>
                 </div>
-                
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-serif font-medium">{template.name}</h3>
                     <span className="text-lg font-bold text-primary">{template.price}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                  
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1 rounded-full">
                       Quick view

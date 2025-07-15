@@ -20,30 +20,10 @@ const Index = () => {
       description: "Create stunning wedding websites with our easy builder",
       image: "/placeholder.svg", 
       features: ["Drag & drop builder", "RSVP management", "Photo galleries", "Mobile responsive"]
-    },
-    {
-      icon: Calendar,
-      title: "Planning Tools",
-      description: "Complete wedding planning platform coming soon",
-      image: "/placeholder.svg",
-      features: ["Vendor directory", "Budget tracking", "Timeline management", "Guest coordination"]
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Priya & Arjun",
-      location: "Kottayam, Kerala",
-      text: "Matson made our wedding planning so much easier. The card designs were beautiful and affordable!",
-      rating: 5
-    },
-    {
-      name: "Meera & Vikram", 
-      location: "Trivandrum, Kerala",
-      text: "The website builder was intuitive and our guests loved the Kerala-inspired design themes.",
-      rating: 5
-    }
-  ];
+  
 
   return (
     <div className="min-h-screen">
@@ -61,7 +41,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-2 gap-6">
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
@@ -146,11 +126,7 @@ const Index = () => {
                     <p className="text-muted-foreground">Modern tools and technology to make wedding planning effortless.</p>
                   </div>
                 </div>
-              </div>
-              
-              <Button className="mt-8 rounded-full px-8" size="lg">
-                Start planning
-              </Button>
+              </div>  
             </div>
             
             <div className="relative">
@@ -164,41 +140,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-serif font-medium mb-6">
-              Loved by couples across Kerala
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              See what our happy couples have to say about their Matson experience.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-8 border-0 shadow-md">
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-primary text-primary" />
-                  ))}
-                </div>
-                
-                <p className="text-lg text-muted-foreground mb-6 italic">
-                  "{testimonial.text}"
-                </p>
-                
-                <div>
-                  <div className="font-medium">{testimonial.name}</div>
-                  <div className="text-sm text-muted-foreground">{testimonial.location}</div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
+  
       {/* CTA Section */}
       <section className="py-20 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
@@ -213,8 +155,8 @@ const Index = () => {
             <Button size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8">
               Browse card templates
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary rounded-full px-8">
-              Build wedding website
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 rounded-full px-8">
+            Browse wedding website
             </Button>
           </div>
         </div>

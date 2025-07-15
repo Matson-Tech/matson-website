@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import heroImage from '@/assets/hero-wedding.jpg';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -25,19 +26,24 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+            
+            <Link to="/gallery">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-2 border-white text-white hover:bg-white hover:text-matson-black text-lg px-8 py-4 rounded-full font-medium bg-transparent"
+              >
+                Browse card templates
+              </Button>
+            </Link>
+            <Link to="/website">  
             <Button 
               size="lg" 
-              className="bg-white text-matson-black hover:bg-white/90 text-lg px-8 py-4 rounded-full font-medium"
-            >
-              Let's go
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
               className="border-2 border-white text-white hover:bg-white hover:text-matson-black text-lg px-8 py-4 rounded-full font-medium bg-transparent"
-            >
-              Browse card templates
+              >
+              Browse website templates
             </Button>
+            </Link>
           </div>
         </div>
       </div>

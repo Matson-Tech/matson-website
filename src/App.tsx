@@ -12,6 +12,7 @@ import Gallery from "./pages/Gallery";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Website from "./pages/website";
 
 const queryClient = new QueryClient();
 
@@ -20,7 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="min-h-screen bg-background flex flex-col">
           <Navbar />
           <main className="flex-1">
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/about" element={<><About /><Footer /></>} />
               <Route path="/services" element={<><Services /><Footer /></>} />
               <Route path="/gallery" element={<><Gallery /><Footer /></>} />
+              <Route path="/website" element={<><Website /><Footer /></>} />
               {/* <Route path="/testimonials" element={<><Testimonials /><Footer /></>} /> */}
               <Route path="/contact" element={<><Contact /><Footer /></>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
