@@ -28,7 +28,7 @@ const Navbar = () => {
             <img 
               src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
               alt="Matson Cards" 
-              className="h-10 w-auto object-contain group-hover:scale-105 transition-smooth" 
+              className="h-12 w-auto object-contain group-hover:scale-105 transition-smooth" 
             />
           </Link>
 
@@ -45,7 +45,8 @@ const Navbar = () => {
                 {item.name}
               </Link>
             ))}
-            <Button className="btn-kerala ml-4">Get Started</Button>
+            <Button variant="outline" className="mr-2">Log in</Button>
+            <Button className="bg-matson-black hover:bg-matson-black/90 text-white rounded-full px-6">Get started</Button>
           </div>
 
           {/* Mobile menu button */}
@@ -77,7 +78,7 @@ const Navbar = () => {
                   {item.name}
                 </Link>
               ))}
-              <Button className="btn-kerala mx-4 mt-2">Get Started</Button>
+              <Button className="bg-matson-black hover:bg-matson-black/90 text-white rounded-full px-6 mx-4 mt-2">Get started</Button>
             </div>
           </div>
         )}

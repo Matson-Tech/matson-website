@@ -1,95 +1,54 @@
-import { ArrowRight, Sparkles, Heart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { ChevronDown } from 'lucide-react';
 import heroImage from '@/assets/hero-wedding.jpg';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src={heroImage} 
-          alt="Kerala Wedding Celebration" 
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/60 to-transparent"></div>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${heroImage})` }}
+      >
+        <div className="absolute inset-0 bg-black/50"></div>
       </div>
-
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-10 animate-pulse">
-        <Sparkles className="w-6 h-6 text-primary opacity-60 float-animation" />
-      </div>
-      <div className="absolute top-40 right-20 animate-pulse delay-75">
-        <Heart className="w-8 h-8 text-accent opacity-50 float-animation" />
-      </div>
-      <div className="absolute bottom-32 left-20 animate-pulse delay-150">
-        <Star className="w-5 h-5 text-primary opacity-70 float-animation" />
-      </div>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              
-              
-              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                Craft Your
-                <span className="text-gradient block">Perfect Day</span>
-              </h1>
-              
-              <p className="text-xl text-muted-foreground leading-relaxed max-w-md">
-                From bespoke wedding cards to stunning websites, Matson brings your love story to life with Kerala's finest artistry and modern innovation.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="btn-kerala group">
-                Design Your Cards
-                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-smooth" />
-              </Button>
-              <Button size="lg" variant="outline" className="btn-kerala-outline">
-                Build Your Website
-              </Button>
-            </div>
-
-            {/* Stats */}
-           
-          </div>
-
-          {/* Right Content - Service Cards */}
-          <div className="space-y-6">
-            <Card className="card-elegant p-6 hover-scale">
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-primary" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Premium Wedding Cards</h3>
-                  <p className="text-muted-foreground text-sm">Starting from ₹10 with zero design fees. Elegant, affordable, uniquely yours.</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="card-elegant p-6 hover-scale">
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-accent" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Wedding Website Builder</h3>
-                  <p className="text-muted-foreground text-sm">DIY portal with Kerala cultural motifs. Share your story beautifully.</p>
-                </div>
-              </div>
-            </Card>
-
+      
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-4 text-center text-white">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="font-serif text-5xl md:text-7xl font-medium mb-6 leading-tight">
+            Wedding planning starts here
+          </h1>
           
+          <p className="text-xl md:text-2xl mb-12 text-white/90 max-w-3xl mx-auto leading-relaxed font-light">
+            From beautiful invitation templates and wedding websites to full planning services — Matson is here for all the days along the way
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+            <Button 
+              size="lg" 
+              className="bg-white text-matson-black hover:bg-white/90 text-lg px-8 py-4 rounded-full font-medium"
+            >
+              Let's go
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-2 border-white text-white hover:bg-white hover:text-matson-black text-lg px-8 py-4 rounded-full font-medium bg-transparent"
+            >
+              Browse card templates
+            </Button>
           </div>
         </div>
       </div>
-    </section>
+      
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-8 h-8 border border-white/50 rounded-full flex items-center justify-center">
+          <ChevronDown className="w-4 h-4 text-white/50" />
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -9,7 +9,7 @@ const About = () => {
       <section className="py-24 hero-gradient">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h1 className="text-5xl font-bold">About Matson Wedding Solutions</h1>
+            <h1 className="text-5xl font-bold font-serif">About Matson Wedding Solutions</h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               The artistry of love, etched in ink. From humble beginnings in Kottayam to becoming Kerala's most trusted wedding partner.
             </p>
@@ -23,7 +23,7 @@ const About = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="space-y-4">
-                <h2 className="text-3xl font-bold">Our Story</h2>
+                <h2 className="text-3xl font-bold font-serif">Our Story</h2>
                 <p className="text-muted-foreground leading-relaxed">
                   Founded in the heart of Kottayam, Kerala, Matson Wedding Cards began as a small family workshop crafting bespoke paper invitations. Our journey started with a simple belief: every love story deserves to be told beautifully.
                 </p>
@@ -69,7 +69,7 @@ const About = () => {
       <section className="py-16 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Our Locations</h2>
+            <h2 className="text-3xl font-bold font-serif mb-4">Our Locations</h2>
             <p className="text-muted-foreground">Serving couples across Kerala from our strategic locations</p>
           </div>
 
@@ -119,7 +119,7 @@ const About = () => {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto space-y-8">
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold">Connect With Us</h2>
+              <h2 className="text-3xl font-bold font-serif">Connect With Us</h2>
               <p className="text-muted-foreground">
                 Follow our journey and stay updated with the latest designs and wedding trends
               </p>

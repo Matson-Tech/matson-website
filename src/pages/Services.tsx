@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 
 const Services = () => {
   const cardFeatures = [
+    'Pre-designed professional templates',
     'Zero design fees on starter collections',
     'Premium matte and parchment options',
     'Eco-friendly materials available',
@@ -39,7 +40,7 @@ const Services = () => {
       <section className="py-24 hero-gradient">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h1 className="text-5xl font-bold">Our Services</h1>
+            <h1 className="text-5xl font-bold font-serif">Our Services</h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Comprehensive wedding solutions that blend Kerala's rich traditions with modern innovation
             </p>
@@ -56,9 +57,9 @@ const Services = () => {
                 <Badge className="bg-primary/10 text-primary border-primary/20">
                   Starting from ₹10
                 </Badge>
-                <h2 className="text-4xl font-bold">Card Creation Studio</h2>
+                <h2 className="text-4xl font-bold font-serif">Card Template Collection</h2>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  Affordable elegance meets traditional artistry. Create stunning wedding invitations that reflect your unique love story with our innovative design platform.
+                  Browse and select from our curated collection of professionally designed wedding invitation templates. Each design reflects Kerala's rich traditions with modern elegance.
                 </p>
               </div>
 
@@ -134,7 +135,7 @@ const Services = () => {
                 <Badge className="bg-accent/10 text-accent border-accent/20">
                   DIY Platform
                 </Badge>
-                <h2 className="text-4xl font-bold">Wedding Website Builder</h2>
+                <h2 className="text-4xl font-bold font-serif">Wedding Website Builder</h2>
                 <p className="text-xl text-muted-foreground leading-relaxed">
                   Share your love story with the world through beautifully designed wedding websites featuring authentic Kerala cultural elements.
                 </p>
@@ -161,8 +162,8 @@ const Services = () => {
             <div className="lg:order-1 space-y-6">
               <Card className="card-elegant p-6">
                 <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-kerala-green/20 rounded-lg flex items-center justify-center">
-                    <Heart className="w-6 h-6 text-kerala-green" />
+                  <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+                    <Heart className="w-6 h-6 text-primary" />
                   </div>
                   <div className="space-y-2">
                     <h4 className="text-lg font-semibold">Love Story Timeline</h4>
@@ -198,10 +199,10 @@ const Services = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="space-y-4">
-              <Badge className="bg-kerala-green/10 text-kerala-green border-kerala-green/20">
+              <Badge className="bg-primary/10 text-primary border-primary/20">
                 Coming Soon
               </Badge>
-              <h2 className="text-4xl font-bold">Complete Wedding Planning</h2>
+              <h2 className="text-4xl font-bold font-serif">Complete Wedding Planning</h2>
               <p className="text-xl text-muted-foreground leading-relaxed">
                 Your one-stop solution for end-to-end wedding planning. From venue selection to vendor coordination, we're building the ultimate planning platform.
               </p>
@@ -210,8 +211,8 @@ const Services = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {planningFeatures.map((feature, index) => (
                 <Card key={index} className="card-elegant p-6 text-center hover-scale">
-                  <div className="w-12 h-12 bg-kerala-green/20 rounded-lg flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-6 h-6 text-kerala-green" />
+                  <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-6 h-6 text-primary" />
                   </div>
                   <p className="font-medium">{feature}</p>
                 </Card>
