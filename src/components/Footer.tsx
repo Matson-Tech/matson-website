@@ -2,6 +2,7 @@ import { Heart, MapPin, Phone, Mail, Globe, Instagram, Facebook, ArrowRight } fr
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import matsonIcon from '../assets/matson-icon.png';
 
 const Footer = () => {
   return (
@@ -12,8 +13,8 @@ const Footer = () => {
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Brand Section */}
             <div className="lg:col-span-1 space-y-6">
-              <div className="flex items-center space-x-2">
-                <Heart className="w-8 h-8 text-primary" />
+              <div className="flex items-center space-x-3">
+                <img src={matsonIcon} alt="Matson Logo" className="w-10 h-10 object-contain" />
                 <div>
                   <span className="text-xl font-bold text-foreground block">Matson</span>
                   <span className="text-sm text-primary">Wedding Solutions</span>
@@ -43,7 +44,7 @@ const Footer = () => {
                   { name: 'About Us', path: '/about' },
                   { name: 'Our Services', path: '/services' },
                   { name: 'Design Gallery', path: '/gallery' },
-                  { name: 'Testimonials', path: '/testimonials' },
+                  // { name: 'Testimonials', path: '/testimonials' },
                   { name: 'Contact Us', path: '/contact' }
                 ].map((link) => (
                   <Link

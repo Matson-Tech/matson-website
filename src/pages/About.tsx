@@ -155,9 +155,6 @@ const About = () => {
                   <p className="text-muted-foreground leading-relaxed">
                     Our journey doesn't end with cards and websites. We're building towards becoming a comprehensive wedding planning platform, offering venue selection, vendor management, budget planning, and timeline coordination. Join us as we revolutionize how Kerala celebrates love.
                   </p>
-                  <Button className="btn-kerala mt-4">
-                    Become a Beta Partner
-                  </Button>
                 </div>
               </div>
             </Card>

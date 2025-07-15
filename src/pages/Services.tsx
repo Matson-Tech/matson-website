@@ -75,10 +75,7 @@ const Services = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="btn-kerala">
-                  Start Designing
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
+               
                 <Button size="lg" variant="outline" className="btn-kerala-outline">
                   View Gallery
                 </Button>
@@ -190,19 +187,7 @@ const Services = () => {
                 </div>
               </Card>
 
-              <Card className="card-elegant p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-accent" />
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="text-lg font-semibold">Kerala Themes</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Authentic cultural motifs and designs celebrating Kerala's diverse traditions.
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              
             </div>
           </div>
         </div>
@@ -233,15 +218,7 @@ const Services = () => {
               ))}
             </div>
 
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Be among the first to experience our comprehensive planning platform
-              </p>
-              <Button size="lg" className="btn-kerala">
-                Join Beta Program
-                <Star className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
+         
           </div>
         </div>
       </section>

@@ -33,9 +33,7 @@ const Hero = () => {
           {/* Left Content */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-                <span className="text-sm font-medium text-primary">Kerala's Premier Wedding Solutions</span>
-              </div>
+              
               
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Craft Your
@@ -58,20 +56,7 @@ const Hero = () => {
             </div>
 
             {/* Stats */}
-            <div className="flex items-center space-x-8 pt-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">2500+</div>
-                <div className="text-sm text-muted-foreground">Cards Designed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">850+</div>
-                <div className="text-sm text-muted-foreground">Websites Built</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">98%</div>
-                <div className="text-sm text-muted-foreground">Happy Couples</div>
-              </div>
-            </div>
+           
           </div>
 
           {/* Right Content - Service Cards */}
@@ -100,17 +85,7 @@ const Hero = () => {
               </div>
             </Card>
 
-            <Card className="card-elegant p-6 hover-scale border-2 border-primary/20">
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-kerala-green/20 rounded-lg flex items-center justify-center">
-                  <Star className="w-6 h-6 text-kerala-green" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold">Coming Soon: Full Planning</h3>
-                  <p className="text-muted-foreground text-sm">End-to-end wedding planning with vendor matching and timeline management.</p>
-                </div>
-              </div>
-            </Card>
+          
           </div>
         </div>
       </div>

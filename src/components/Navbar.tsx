@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Heart, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import matsonIcon from '../assets/matson-icon.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +13,7 @@ const Navbar = () => {
     { name: 'About Us', path: '/about' },
     { name: 'Services', path: '/services' },
     { name: 'Gallery', path: '/gallery' },
-    { name: 'Testimonials', path: '/testimonials' },
+    // { name: 'Testimonials', path: '/testimonials' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -28,10 +29,8 @@ const Navbar = () => {
               <Heart className="w-8 h-8 text-primary group-hover:scale-110 transition-smooth" />
               <Sparkles className="w-4 h-4 text-accent absolute -top-1 -right-1 group-hover:animate-pulse" />
             </div>
-            <div>
-              <span className="text-xl font-bold text-foreground">Matson</span>
-              <span className="text-sm text-primary block leading-none">Wedding Solutions</span>
-            </div>
+            
+            <img src={matsonIcon} alt="Matson Logo" className="w-20 h-20 object-contain" />
           </Link>
 
           {/* Desktop Navigation */}
