@@ -22,7 +22,7 @@ const Hero = () => {
           className="w-full h-64 object-cover rounded-2xl shadow-lg" 
         />
       </div>
-
+      
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center w-full">
         <div
@@ -58,7 +58,7 @@ const Hero = () => {
           </div>
         </div>
       </div>
-
+      
       {/* Scroll indicator (desktop only) */}
       <div className="hidden sm:flex absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
         <div className="w-8 h-8 border border-white/50 rounded-full flex items-center justify-center">

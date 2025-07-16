@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Globe, Calendar, Users, Star, ArrowRight, CheckCircle, Sparkles, Award, Palette, Gift } from "lucide-react";
 import { motion } from "framer-motion";
+import invitationCard1 from '@/assets/cards/1/487514921_978957041082580_145782463825346552_n.jpg';
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const services = [
@@ -12,7 +14,7 @@ const Index = () => {
       icon: Heart,
       title: "Wedding Invitations",
       description: "Browse beautiful pre-designed templates starting from ₹10",
-      image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=800&q=80",
+      image: invitationCard1,
       features: ["Professional templates", "Kerala cultural designs", "Premium materials", "Fast delivery"],
       gradient: "from-rose-500 to-pink-600"
     },
@@ -21,18 +23,20 @@ const Index = () => {
       title: "Wedding Websites",
       description: "Create stunning wedding websites with our easy builder",
       image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80", 
-      features: ["Drag & drop builder", "RSVP management", "Photo galleries", "Mobile responsive"],
+      features: ["Customizable website","Photo galleries", "Mobile responsive", "Custom domains"],
       gradient: "from-purple-500 to-indigo-600"
     },
     {
       icon: Gift,
-      title: "Wedding Planning",
-      description: "Complete wedding planning services with expert guidance",
+      title: "Wedding Registry",
+      description: "The gifts you want, the way you want them.",
       image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
       features: ["Personal planner", "Vendor coordination", "Timeline management", "Budget planning"],
-      gradient: "from-emerald-500 to-teal-600"
+      gradient: "from-emerald-500 to-teal-600",
+      comingSoon: true
     }
   ];
+  
 
   
 
@@ -77,7 +81,7 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto w-full overflow-x-hidden">
             {services.map((service, index) => {
               const Icon = service.icon;
               return (
@@ -93,17 +97,27 @@ const Index = () => {
                     type: "spring",
                     stiffness: 100
                   }}
-                  className="group interactive-card"
+                  className="group interactive-card w-full max-w-full"
                 >
-                  <Card className="card-premium h-full">
+                  <Card className="card-premium h-full w-full max-w-full box-border">
                     <div className="aspect-[4/3] relative overflow-hidden">
-                      <motion.img 
-                        src={service.image} 
-                        alt={service.title}
-                        className="w-full h-full object-cover"
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                      />
+                      {service.title === "Wedding Websites" ? (
+                        <iframe
+                          src="https://arunandvidya.matson.app/"
+                          title="Arun & Vidya Wedding Website"
+                          className="w-full h-full object-cover border-0 rounded-t-lg"
+                          loading="lazy"
+                          sandbox="allow-scripts allow-same-origin"
+                        />
+                      ) : (
+                        <motion.img 
+                          src={service.image} 
+                          alt={service.title}
+                          className="w-full h-full object-cover"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                        />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                       
                       {/* Floating icon */}
@@ -118,10 +132,13 @@ const Index = () => {
                       </motion.div>
                       
                       {/* Premium badge */}
-                      <div className="absolute top-6 right-6">
-                        <div className="pulse-glow bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-                          Premium
-                        </div>
+                      <div className="absolute top-6 right-6 flex flex-col items-end gap-2">
+                       
+                        {service.comingSoon && (
+                          <div className="bg-gray-800/80 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mt-1 animate-pulse">
+                            Coming Soon
+                          </div>
+                        )}
                       </div>
                       
                       {/* Title overlay */}
@@ -171,12 +188,32 @@ const Index = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <Button className={`w-full rounded-full btn-kerala bg-gradient-to-r ${service.gradient} text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6`}>
-                          <span className="flex items-center justify-center gap-2">
-                            Explore {service.title}
-                            <ArrowRight className="w-5 h-5" />
-                          </span>
-                        </Button>
+                        {service.title === "Wedding Invitations" ? (
+                          <Link to="/gallery">
+                            <Button className={`w-full rounded-full btn-kerala bg-gradient-to-r ${service.gradient} text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6`}>
+                              <span className="flex items-center justify-center gap-2">
+                                Explore {service.title}
+                                <ArrowRight className="w-5 h-5" />
+                              </span>
+                            </Button>
+                          </Link>
+                        ) : service.title === "Wedding Websites" ? (
+                          <Link to="/website">
+                            <Button className={`w-full rounded-full btn-kerala bg-gradient-to-r ${service.gradient} text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6`}>
+                              <span className="flex items-center justify-center gap-2">
+                                Explore {service.title}
+                                <ArrowRight className="w-5 h-5" />
+                              </span>
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Button className={`w-full rounded-full btn-kerala bg-gradient-to-r ${service.gradient} text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6`}>
+                            <span className="flex items-center justify-center gap-2">
+                              Explore {service.title}
+                              <ArrowRight className="w-5 h-5" />
+                            </span>
+                          </Button>
+                        )}
                       </motion.div>
                     </div>
                   </Card>
