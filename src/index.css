@@ -43,18 +43,27 @@
 
     --radius: 0.75rem;
 
-    /* Custom gradients for Matson brand */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--matson-black)));
+    /* Enhanced gradients for premium feel */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(327 73% 50%) 100%);
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--matson-black) / 0.05));
     --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--primary) / 0.05));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--card)/0.8) 0%, hsl(var(--muted)/0.4) 100%);
+    --gradient-premium: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(327 73% 50%) 50%, hsl(var(--accent)) 100%);
+    --gradient-radial: radial-gradient(circle at center, hsl(var(--primary)/0.2) 0%, transparent 70%);
     
-    /* Elegant shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.2);
-    --shadow-soft: 0 4px 12px -2px hsl(var(--foreground) / 0.1);
+    /* Enhanced shadows with depth */
+    --shadow-sm: 0 2px 4px hsl(var(--primary) / 0.1);
+    --shadow-md: 0 4px 12px hsl(var(--primary) / 0.15);
+    --shadow-lg: 0 8px 24px hsl(var(--primary) / 0.2);
+    --shadow-xl: 0 16px 48px hsl(var(--primary) / 0.25);
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.4);
+    --shadow-glass: 0 8px 32px hsl(var(--foreground) / 0.1);
     
-    /* Smooth animations */
+    /* Advanced animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
 
@@ -135,6 +144,14 @@
     background: var(--gradient-hero);
   }
   
+  /* Glass morphism effects */
+  .glass-morphism {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsl(var(--border) / 0.2);
+    box-shadow: var(--shadow-glass);
+  }
+  
   /* Elegant card styling */
   .card-elegant {
     @apply bg-card/80 backdrop-blur-sm border-border/50 shadow-lg;
@@ -142,46 +159,162 @@
     box-shadow: var(--shadow-elegant);
   }
   
-  /* Smooth transitions */
+  /* Premium interactive card */
+  .card-premium {
+    @apply bg-white border-0 overflow-hidden;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-spring);
+    position: relative;
+  }
+  
+  .card-premium:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+    z-index: 1;
+  }
+  
+  .card-premium:hover::before {
+    left: 100%;
+  }
+  
+  /* Enhanced transitions */
   .transition-smooth {
     transition: var(--transition-smooth);
+  }
+  
+  .transition-spring {
+    transition: var(--transition-spring);
   }
   
   .transition-bounce {
     transition: var(--transition-bounce);
   }
   
-  /* Kerala-themed buttons */
+  /* Premium buttons */
   .btn-kerala {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg;
-    transition: var(--transition-smooth);
+    @apply bg-primary text-primary-foreground shadow-md;
+    background: var(--gradient-primary);
+    transition: var(--transition-spring);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-kerala:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .btn-kerala::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  .btn-kerala:hover::before {
+    left: 100%;
   }
   
   .btn-kerala-outline {
     @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground;
-    transition: var(--transition-smooth);
+    transition: var(--transition-spring);
   }
   
-  /* Floating animation for elements */
+  /* Enhanced animations */
   .float-animation {
     animation: float 6s ease-in-out infinite;
   }
   
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
   }
   
-  /* Scale hover effect */
+  .gradient-shift {
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+  
+  /* Hover effects */
   .hover-scale {
-    @apply transition-smooth hover:scale-105;
+    transition: var(--transition-spring);
   }
   
-  /* Text gradient effect */
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  .hover-lift {
+    transition: var(--transition-spring);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .interactive-card {
+    transition: var(--transition-spring);
+    cursor: pointer;
+  }
+  
+  .interactive-card:hover {
+    transform: translateY(-12px) rotateX(2deg);
+    box-shadow: var(--shadow-xl);
+  }
+  
+  /* Text effects */
   .text-gradient {
-    background: var(--gradient-primary);
+    background: var(--gradient-premium);
+    background-size: 200% 200%;
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
+    animation: gradient-shift 3s ease infinite;
+  }
+  
+  /* Keyframe animations */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+    50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
+  }
+  
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  /* Responsive utilities */
+  .responsive-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base lg:text-lg;
   }
 }
