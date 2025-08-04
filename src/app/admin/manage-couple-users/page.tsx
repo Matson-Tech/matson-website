@@ -1,7 +1,7 @@
 // Converted from JSX to TSX
 'use client';
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../supabaseClient.js';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 

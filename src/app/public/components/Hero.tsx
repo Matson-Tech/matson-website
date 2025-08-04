@@ -1,27 +1,46 @@
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
-import heroImage from '@/assets/hero-wedding.jpg';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 const Hero = () => {
-  return (
-    <div className="relative min-h-screen flex flex-col sm:flex-row items-center justify-center overflow-hidden">
-      {/* Desktop background image */}
-      <div 
-        className="hidden sm:block absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroImage})` }}
-      >
-        <div className="absolute inset-0 bg-black/50"></div>
-      </div>
+  const [showScrollPrompt, setShowScrollPrompt] = useState(false);
 
-      {/* Mobile image on top */}
-      <div className="block sm:hidden w-full mt-4">
-        <img 
-          src={heroImage} 
-          alt="Wedding Hero" 
-          className="w-full h-64 object-cover rounded-2xl shadow-lg" 
-        />
-      </div>
+  useEffect(() => {
+    // Show scroll prompt after 3 seconds
+    const timer = setTimeout(() => {
+      setShowScrollPrompt(true);
+    }, 3000);
+
+    // Hide scroll prompt on scroll
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setShowScrollPrompt(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  return (
+    <div className="relative h-[90vh] flex flex-col sm:flex-row items-center justify-center overflow-hidden">
+      {/* Background video for all devices */}
+      <video
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        src={"/src/app/public/components/animations/wedding_video.mp4"}
+        autoPlay
+        loop
+        muted
+        playsInline
+      >
+        Your browser does not support the video tag.
+      </video>
+      <div className="absolute inset-0 bg-black/50 z-0"></div>
       
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center w-full">
@@ -37,34 +56,30 @@ const Hero = () => {
           <p className="text-lg md:text-2xl mb-12 text-black/80 sm:text-white/90 max-w-3xl mx-auto leading-relaxed font-light">
             From beautiful invitation templates and wedding websites to full planning services — Matson is here for all the days along the way
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10 sm:mb-16">
-            <Link to="/gallery">
+          <div className="flex justify-center items-center mb-10 sm:mb-16">
+            <Link to="/login">
               <Button 
                 size="lg" 
-                variant="outline" 
-                className="border-2 border-matson-black text-matson-black hover:bg-matson-black hover:text-white text-lg px-8 py-4 rounded-full font-medium bg-transparent sm:border-white sm:text-white sm:hover:bg-white sm:hover:text-matson-black"
+                className="border-2 border-matson-black text-matson-black hover:bg-matson-black hover:text-white text-xl px-12 py-4 rounded-full font-medium bg-transparent sm:border-white sm:text-white sm:hover:bg-white sm:hover:text-matson-black transition-all duration-300 shadow-lg hover:shadow-xl"
               >
-                Browse card templates
+                Get Started
               </Button>
-            </Link>
-            <Link to="/website">  
-            <Button 
-              size="lg" 
-              className="border-2 border-matson-black text-matson-black hover:bg-matson-black hover:text-white text-lg px-8 py-4 rounded-full font-medium bg-transparent sm:border-white sm:text-white sm:hover:bg-white sm:hover:text-matson-black"
-              >
-              Browse website templates
-            </Button>
             </Link>
           </div>
         </div>
       </div>
       
-      {/* Scroll indicator (desktop only) */}
-      <div className="hidden sm:flex absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-8 h-8 border border-white/50 rounded-full flex items-center justify-center">
-          <ChevronDown className="w-4 h-4 text-white/50" />
+      {/* Animated scroll prompt */}
+      {showScrollPrompt && (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce transition-opacity duration-500">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-10 h-10 border-2 border-white/70 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-sm">
+              <ChevronDown className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-white/80 text-sm font-medium hidden sm:block">Scroll down</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

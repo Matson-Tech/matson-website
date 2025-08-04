@@ -5,23 +5,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { lazy, Suspense } from "react";
+import { WeddingProvider } from "./wedding/contexts/WeddingProvider";
 import PublicLayout from "@/app/public/layout";
 import Index from "@/app/public/Index";
 import NotFound from "@/app/public/NotFound";
 
 // Lazy load heavy components
-const About = lazy(() => import("./public/About"));
 const Gallery = lazy(() => import("./public/Gallery"));
-const Contact = lazy(() => import("./public/Contact"));
 const Website = lazy(() => import("./public/website"));
+const WeddingEdit = lazy(() => import("./wedding/edit/page"));
 
 // Import login page directly for now
 import PublicLogin from "./public/login/page";
 
 // Wedding imports (lazy loaded)
-const WeddingLogin = lazy(() => import("./wedding/login/page"));
-const WeddingRegister = lazy(() => import("./wedding/register/page"));
-const WeddingDashboard = lazy(() => import("./wedding/dashboard/page"));
 const WeddingLayout = lazy(() => import("./wedding/layout"));
 
 // Admin imports (lazy loaded)
@@ -50,111 +47,132 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Wedding routes with WeddingProvider
+const WeddingRoutes = () => (
+  <WeddingProvider>
+    <Routes>
+      <Route path="/edit" element={
+        <WeddingLayout>
+          <WeddingEdit />
+        </WeddingLayout>
+      } />
+      {/* Add other wedding routes here */}
+    </Routes>
+  </WeddingProvider>
+);
+
+// Public routes without any provider
+const PublicRoutes = () => (
+  <Routes>
+    <Route path="/" element={
+      <PublicLayout>
+        <Index />
+      </PublicLayout>
+    } />
+    <Route path="/gallery" element={
+      <PublicLayout>
+        <Gallery />
+      </PublicLayout>
+    } />
+    <Route path="/website" element={
+      <PublicLayout>
+        <Website />
+      </PublicLayout>
+    } />
+    <Route path="/login" element={
+      <PublicLayout>
+        <PublicLogin />
+      </PublicLayout>
+    } />
+  </Routes>
+);
+
+// Partner routes
+const PartnerRoutes = () => (
+  <Routes>
+    <Route path="/" element={
+      <PartnerLayout>
+        <PartnerWelcome />
+      </PartnerLayout>
+    } />
+    <Route path="/auth" element={<PartnerAuth />} />
+    <Route path="/dashboard" element={
+      <PartnerLayout>
+        <PartnerWelcome />
+      </PartnerLayout>
+    } />
+    <Route path="/wedding-details" element={
+      <PartnerLayout>
+        <PartnerWeddingDetails />
+      </PartnerLayout>
+    } />
+    <Route path="/manage-clients" element={
+      <PartnerLayout>
+        <PartnerManageClients />
+      </PartnerLayout>
+    } />
+  </Routes>
+);
+
+// Admin routes
+const AdminRoutes = () => (
+  <Routes>
+    <Route path="/login" element={<AdminLogin />} />
+    <Route path="/" element={
+      <AdminLayout>
+        <Welcome />
+      </AdminLayout>
+    } />
+    <Route path="/create-user" element={
+      <AdminLayout>
+        <CreateUser />
+      </AdminLayout>
+    } />
+    <Route path="/manage-couple-users" element={
+      <AdminLayout>
+        <ManageCoupleUsers />
+      </AdminLayout>
+    } />
+    <Route path="/manage-partner-users" element={
+      <AdminLayout>
+        <ManagePartnerUsers />
+      </AdminLayout>
+    } />
+  </Routes>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <div className="min-h-screen bg-background flex flex-col">
             <main className="flex-1">
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                  {/* Public Routes with Navbar */}
-                  <Route path="/" element={
-                    <PublicLayout>
-                      <Index />
-                    </PublicLayout>
-                  } />
-                  <Route path="/about" element={
-                    <PublicLayout>
-                      <About />
-                    </PublicLayout>
-                  } />
-                  <Route path="/gallery" element={
-                    <PublicLayout>
-                      <Gallery />
-                    </PublicLayout>
-                  } />
-                  
-                  <Route path="/contact" element={
-                    <PublicLayout>
-                      <Contact />
-                    </PublicLayout>
-                  } />
-                  <Route path="/website" element={
-                    <PublicLayout>
-                      <Website />
-                    </PublicLayout>
-                  } />
-                  <Route path="/login" element={<PublicLogin />} />
+                  {/* Public Routes */}
+                  <Route path="/*" element={<PublicRoutes />} />
                   
                   {/* Wedding Routes */}
-                  <Route path="/wedding/login" element={<WeddingLogin />} />
-                  <Route path="/wedding/register" element={<WeddingRegister />} />
-                  <Route path="/wedding/dashboard" element={
-                    <WeddingLayout>
-                      <WeddingDashboard />
-                    </WeddingLayout>
-                  } />
+                  <Route path="/wedding/*" element={<WeddingRoutes />} />
                   
                   {/* Partner Routes */}
-                  <Route path="/partner" element={
-                    <PartnerLayout>
-                      <PartnerWelcome />
-                    </PartnerLayout>
-                  } />
-                  <Route path="/partner/auth" element={<PartnerAuth />} />
-                  <Route path="/partner/dashboard" element={
-                    <PartnerLayout>
-                      <PartnerWelcome />
-                    </PartnerLayout>
-                  } />
-                  <Route path="/partner/wedding-details" element={
-                    <PartnerLayout>
-                      <PartnerWeddingDetails />
-                    </PartnerLayout>
-                  } />
-                  <Route path="/partner/manage-clients" element={
-                    <PartnerLayout>
-                      <PartnerManageClients />
-                    </PartnerLayout>
-                  } />
+                  <Route path="/partner/*" element={<PartnerRoutes />} />
                   
-                  {/* Admin Login Route */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  {/* Admin Dashboard Routes */}
-                  <Route path="/admin" element={
-                    <AdminLayout>
-                      <Welcome />
-                    </AdminLayout>
-                  } />
-                  <Route path="/admin/create-user" element={
-                    <AdminLayout>
-                      <CreateUser />
-                    </AdminLayout>
-                  } />
-                  <Route path="/admin/manage-couple-users" element={
-                    <AdminLayout>
-                      <ManageCoupleUsers />
-                    </AdminLayout>
-                  } />
-                  <Route path="/admin/manage-partner-users" element={
-                    <AdminLayout>
-                      <ManagePartnerUsers />
-                    </AdminLayout>
-                  } />
+                  {/* Admin Routes */}
+                  <Route path="/admin/*" element={<AdminRoutes />} />
                   
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  {/* 404 - Not Found */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             </main>
           </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

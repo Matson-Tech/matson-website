@@ -50,16 +50,16 @@ function Welcome() {
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
               <div className="flex items-baseline space-x-2">
-                <p className={`text-3xl font-bold text-${color}-600`}>
+                <div className={`text-3xl font-bold text-${color}-600`}>
                   {loading ? (
                     <div className="flex items-center space-x-2">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current"></div>
-                      <span className="text-gray-400">Loading...</span>
+                      <span className="text-gray-400 text-base">Loading...</span>
                     </div>
                   ) : (
                     value ?? 'N/A'
                   )}
-                </p>
+                </div>
                 {!loading && value !== null && (
                   <span className="text-sm text-gray-500">users</span>
                 )}

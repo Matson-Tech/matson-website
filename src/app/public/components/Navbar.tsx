@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingCart, Heart, Globe, Gift, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useWedding } from '@/app/wedding/contexts/WeddingContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,47 +12,47 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Create a safe hook that won't throw if context is not available
+const useSafeWedding = () => {
+  try {
+    return useWedding();
+  } catch (error) {
+    // Return default values when outside WeddingProvider
+    return {
+      user: null,
+      isLoggedIn: false,
+      logout: async () => {},
+      globalIsLoading: false,
+    };
+  }
+};
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Use the safe wedding context
+  const { user, isLoggedIn, logout, globalIsLoading } = useSafeWedding();
 
-  // Check for user session on component mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('wedding_user');
-    const storedIsLoggedIn = localStorage.getItem('wedding_isLoggedIn');
-    
-    if (storedUser && storedIsLoggedIn === 'true') {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsLoggedIn(true);
-      } catch (e) {
-        // Clear invalid data
-        localStorage.removeItem('wedding_user');
-        localStorage.removeItem('wedding_isLoggedIn');
-        localStorage.removeItem('wedding_userId');
-      }
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('wedding_user');
-    localStorage.removeItem('wedding_isLoggedIn');
-    localStorage.removeItem('wedding_userId');
-    setUser(null);
-    setIsLoggedIn(false);
-    navigate('/');
   };
 
   const navItems = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Gallery', path: '/gallery' },
-    { name: 'Contact', path: '/contact' },
-    { name: 'Wedding Websites', path: '/website' },
+    { name: 'Home', path: '#home' },
+    { name: 'About', path: '#about' },
+    { name: 'Contact', path: '#contact' },
+  ];
+
+  const inviteItems = [
+    { name: 'Invitation Card', path: '/gallery' },
+    { name: 'Wedding Website', path: '/website' },
   ];
 
   const isActive = (path: string) => {
@@ -64,109 +65,116 @@ const Navbar = () => {
   return (
     <nav className="bg-white border-b border-border sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center h-16">
           {/* Left Navigation */}
-          <div className="hidden lg:flex items-center space-x-6">
-            {navItems.slice(0, 4).map((item) => (
-              <Link
+          <div className="hidden lg:flex items-center space-x-6 flex-1">
+            {navItems.map((item) => (
+              <a
                 key={item.name}
-                to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary relative ${
-                  isActive(item.path) ? 'text-primary' : 'text-foreground'
-                }`}
+                href={item.path}
+                className="text-sm font-medium transition-all duration-300 hover:text-primary relative text-foreground group py-2 px-3 rounded-lg hover:bg-primary/5"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const target = document.querySelector(item.path);
+                  if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
               >
                 {item.name}
-                {isActive(item.path) && (
-                  <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"></div>
-                )}
-              </Link>
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-full"></span>
+              </a>
             ))}
+            
+            {/* Invite Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="text-sm font-medium transition-colors hover:text-primary text-foreground focus:outline-none">
+                Invite
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuLabel>Invitation Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {inviteItems.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link to={item.path} className="w-full">
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Logo - Centered */}
-          <Link to="/" className="flex items-center group">
-            <img 
-              src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
-              alt="Matson Cards" 
-              className="h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-200" 
-            />
-          </Link>
+          <div className="flex-1 flex justify-center">
+            <Link to="/" className="flex items-center group">
+              <img 
+                src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
+                alt="Matson Cards" 
+                className="h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-200" 
+              />
+            </Link>
+          </div>
 
-          {/* Right Navigation */}
-          <div className="hidden lg:flex items-center space-x-4">
-            {navItems.slice(4).map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary relative ${
-                  isActive(item.path) ? 'text-primary' : 'text-foreground'
-                }`}
-              >
-                {item.name}
-                {isActive(item.path) && (
-                  <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"></div>
-                )}
-              </Link>
-            ))}
+          {/* Right Navigation - Login Button */}
+          <div className="hidden lg:flex items-center space-x-2 flex-1 justify-end">
+            <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100">
+              <Search className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100">
+              <ShoppingCart className="w-4 h-4" />
+            </Button>
             
-            <div className="flex items-center space-x-2 ml-4">
-              <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100">
-                <Search className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100">
-                <ShoppingCart className="w-4 h-4" />
-              </Button>
-              
-              {isLoggedIn && user ? (
+            <div className="flex items-center space-x-4">
+              {globalIsLoading ? (
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : isLoggedIn ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 hover:from-purple-600 hover:to-pink-600 flex items-center space-x-2"
-                    >
-                      <User className="w-4 h-4" />
-                      <span>{user.bride_name || user.groom_name || 'User'}</span>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <User className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.bride_name && user.groom_name 
-                            ? `${user.bride_name} & ${user.groom_name}`
-                            : user.bride_name || user.groom_name || 'User'
-                          }
-                        </p>
+                        <p className="text-sm font-medium leading-none">{user?.email}</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
+                          {user?.bride_name && user?.groom_name 
+                            ? `${user.groom_name} & ${user.bride_name}`
+                            : 'Wedding Account'}
                         </p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/wedding/dashboard')}>
+                    <DropdownMenuItem onClick={() => navigate('/wedding/edit')}>
                       Wedding Dashboard
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/website')}>
-                      Wedding Website
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Button 
+                  variant="ghost" 
                   size="sm" 
-                  className="bg-matson-black hover:bg-matson-black/90 text-white rounded-full px-6 transition-all duration-200 hover:scale-105 flex items-center space-x-2"
                   onClick={() => navigate('/login')}
+                  className="text-foreground hover:text-primary"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span>Login</span>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign In
                 </Button>
               )}
+              <Button 
+                size="sm" 
+                onClick={() => isLoggedIn ? navigate('/') : navigate('/get-started')}
+                className="bg-matson-black hover:bg-matson-black/90 text-white"
+              >
+                {isLoggedIn ? 'My Wedding' : 'Get Started'}
+              </Button>
             </div>
           </div>
 
@@ -188,20 +196,44 @@ const Navbar = () => {
           <div className="lg:hidden border-t border-border py-4 bg-white">
             <div className="flex flex-col space-y-2">
               {navItems.map((item) => (
-                <Link
+                <a
                   key={item.name}
-                  to={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={`text-sm font-medium py-3 px-4 rounded-md transition-colors hover:bg-gray-50 flex items-center space-x-2 ${
-                    isActive(item.path) ? 'text-primary bg-primary/10' : 'text-foreground'
-                  }`}
+                  href={item.path}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    const target = document.querySelector(item.path);
+                    if (target) {
+                      target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="text-sm font-medium py-3 px-4 rounded-lg transition-all duration-300 hover:bg-primary/5 hover:text-primary flex items-center space-x-3 text-foreground group hover:shadow-sm"
                 >
                   {item.name === 'Home' && <Heart className="w-4 h-4" />}
-                  {item.name === 'Services' && <Gift className="w-4 h-4" />}
-                  {item.name === 'Wedding Websites' && <Globe className="w-4 h-4" />}
                   <span>{item.name}</span>
-                </Link>
+                </a>
               ))}
+              
+              {/* Mobile Invite Section */}
+              <div className="py-2">
+                <div className="text-sm font-medium text-foreground px-4 py-2 bg-gray-50 rounded-md">
+                  Invite
+                </div>
+                {inviteItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className={`text-sm font-medium py-2 px-8 rounded-md transition-colors hover:bg-gray-50 flex items-center space-x-2 ${
+                      isActive(item.path) ? 'text-primary bg-primary/10' : 'text-foreground'
+                    }`}
+                  >
+                    {item.name === 'Invitation Card' && <Gift className="w-4 h-4" />}
+                    {item.name === 'Wedding Website' && <Globe className="w-4 h-4" />}
+                    <span>{item.name}</span>
+                  </Link>
+                ))}
+              </div>
               
               <div className="px-4 pt-4 space-y-3 border-t border-border mt-4">
                 {isLoggedIn && user ? (
@@ -232,11 +264,11 @@ const Navbar = () => {
                         size="sm" 
                         className="flex-1"
                         onClick={() => {
-                          navigate('/website');
+                          navigate('/wedding/edit');
                           setIsOpen(false);
                         }}
                       >
-                        Website
+                        Create Website
                       </Button>
                     </div>
                     <Button 

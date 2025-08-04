@@ -86,7 +86,7 @@ export type Database = {
                     {
                         foreignKeyName: "guest_wishes_variant_fkey";
                         columns: ["variant"];
-                        referencedRelation: "wedding_data";
+                        referencedRelation: "web_entries";
                         referencedColumns: ["id"];
                     },
                 ];

@@ -1,26 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
-const websites = [
-  {
-    name: 'Nithin & Keziah',
-    url: 'https://nithinandkeziah.matson.app/',
-    // Optionally add a thumbnail image if available
-    // thumbnail: '/path/to/thumbnail.jpg',
-  },
-  {
-    name: 'Rafael & Kirste',
-    url: 'https://rafaelandkirste.matson.app/',
-  },
-  {
-    name: 'Duke & Elaine',
-    url: 'https://dukeandelaine.matson.app/',
-  },
-  {
-    name: 'Arun & Vidya',
-    url: 'https://arunandvidya.matson.app/',
-  },
-];
+import { WEDDING_WEBSITES } from './constants/websites';
 
 const WebsiteGallery = () => {
   return (
@@ -44,7 +24,7 @@ const WebsiteGallery = () => {
       <section className="py-12 flex-1">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {websites.map((site, idx) => (
+            {WEDDING_WEBSITES.map((site, idx) => (
               <Card key={site.url} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 shadow-md flex flex-col">
                 <div className="aspect-[4/3] bg-muted/20 flex items-center justify-center relative overflow-hidden">
                   {/* If you have a thumbnail, use <img src={site.thumbnail} ... /> instead of iframe */}

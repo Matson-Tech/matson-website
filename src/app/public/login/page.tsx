@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, Heart, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useWedding } from '@/app/wedding/contexts/WeddingProvider';
 import { supabase } from '@/integrations/supabase/client';
 
 const LoginPage = () => {
@@ -22,7 +23,17 @@ const LoginPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { login, isLoggedIn } = useWedding();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (isLoggedIn) {
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    }
+  }, [isLoggedIn, navigate, location.state]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -30,48 +41,38 @@ const LoginPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('user_profile')
-        .select('*')
-        .eq('email', formData.email)
-        .maybeSingle();
-
-      if (error || !data) {
+      const { error, user } = await login(formData.email, formData.password);
+      
+      if (error || !user) {
         toast({
           title: "Login Failed",
-          description: "No user found with this email",
-          variant: "destructive",
-        });
-      } else if (data.password !== formData.password) {
-        toast({
-          title: "Login Failed",
-          description: "Incorrect password",
+          description: error || "Invalid email or password",
           variant: "destructive",
         });
       } else {
-        // Store user data in localStorage for session management
-        const userData = {
-          id: data.user_id,
-          email: data.email,
-          bride_name: data.bride_name,
-          groom_name: data.groom_name,
-          phone_number: data.phone_number,
-        };
-        localStorage.setItem('wedding_user', JSON.stringify(userData));
-        localStorage.setItem('wedding_isLoggedIn', 'true');
-        localStorage.setItem('wedding_userId', data.user_id);
-
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${data.bride_name || data.groom_name || 'User'}!`,
+          description: `Welcome back, ${user.bride_name || user.groom_name || 'User'}!`,
         });
-        // Redirect to home page (Index.tsx) instead of wedding dashboard
-        navigate('/');
+        
+        // Redirect to the root path after successful login
+        navigate('/', { replace: true });
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login Error",
         description: "An unexpected error occurred. Please try again.",
@@ -396,4 +397,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;
