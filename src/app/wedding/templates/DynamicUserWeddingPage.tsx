@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 // Define the template configuration
 const templates = [
   { 
-    key: "model_1", 
-    label: "Template 1", 
+    key: "model_4", 
+    label: "Template 3", 
     preview: "/placeholder.svg",
-    component: () => import("./[slag]/model_1/pages/Index").then(mod => mod.default)
+    component: () => import("./[slag]/model_4/pages/Index").then(mod => mod.default)
   },
 ];
 
@@ -24,7 +24,7 @@ interface TemplateComponentProps {
 
 export default function DynamicUserWeddingPage({ 
   editable = false, 
-  template = "model_1", 
+  template = "model_4", 
   webEntry 
 }: DynamicUserWeddingPageProps) {
   const [selected, setSelected] = useState(template);

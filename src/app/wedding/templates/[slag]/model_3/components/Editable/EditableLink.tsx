@@ -7,11 +7,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogDescription,
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import { useWedding } from "@/app/wedding/hooks/useWedding";
+import { useWedding } from "@/app/wedding/contexts/WeddingContext";
 import { cn } from "@/lib/utils";
 import "../../styles/linkStyle.css";
 
@@ -19,7 +18,7 @@ interface EditableLinkProps {
     text: string;
     link: string;
     onSave: (text: string, link: string) => void;
-    label: string;
+    label?: string;
     className?: string;
     children?: React.ReactNode;
 }
@@ -66,7 +65,7 @@ const EditableLink: React.FC<EditableLinkProps> = ({
     const editableClassName = cn(
         "text-left w-full underline",
         isLoggedIn
-            ? `cursor-pointer border-2 border-red-500 rounded transition-colors`
+            ? `cursor-pointer bg-red-100 hover:bg-red-200 border border-red-300 transition-colors`
             : className,
     );
 
@@ -76,11 +75,7 @@ const EditableLink: React.FC<EditableLinkProps> = ({
                 href={link}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className={cn(
-                    "px-1 text-wedding-gold italic text-left md:max-w-full custome_link",
-                    className,
-                )}
+                className={`px-1 text-[#1d4ed8] italic text-left md:max-w-full custome_link ${className}`}
             >
                 {text}
             </a>
@@ -102,9 +97,6 @@ const EditableLink: React.FC<EditableLinkProps> = ({
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>{label}</DialogTitle>
-                        <DialogDescription>
-                            Edit the text and link for this element
-                        </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
@@ -130,12 +122,7 @@ const EditableLink: React.FC<EditableLinkProps> = ({
                         <Button variant="outline" onClick={handleCancel}>
                             Cancel
                         </Button>
-                        <Button
-                            onClick={handleSave}
-                            disabled={editText === text && editLink === link}
-                        >
-                            Save
-                        </Button>
+                        <Button onClick={handleSave}>Save</Button>
                     </div>
                 </DialogContent>
             </Dialog>

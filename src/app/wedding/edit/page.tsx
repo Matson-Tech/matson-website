@@ -201,11 +201,11 @@ const WeddingEditPage = () => {
   console.log('[WeddingEditPage] Rendering DynamicUserWeddingPage with wedding data');
   
   try {
-    console.log("correct")
+    console.log("aaa")
     return (
       <DynamicUserWeddingPage 
         editable={true}
-        template="model_1"
+        template="model_4"
         webEntry={{ web_data: weddingData }}
       />
     );
