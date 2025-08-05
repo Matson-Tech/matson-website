@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { lazy, Suspense } from "react";
 import { WeddingProvider } from "./wedding/contexts/WeddingProvider";
+import AuthGuard from "./partner/auth/AuthGuard";
 import PublicLayout from "@/app/public/layout";
 import Index from "@/app/public/Index";
 import NotFound from "@/app/public/NotFound";
@@ -87,32 +88,61 @@ const PublicRoutes = () => (
   </Routes>
 );
 
-// Partner routes
-const PartnerRoutes = () => (
-  <Routes>
-    <Route path="/" element={
-      <PartnerLayout>
-        <PartnerWelcome />
-      </PartnerLayout>
-    } />
-    <Route path="/auth" element={<PartnerAuth />} />
-    <Route path="/dashboard" element={
-      <PartnerLayout>
-        <PartnerWelcome />
-      </PartnerLayout>
-    } />
-    <Route path="/wedding-details" element={
-      <PartnerLayout>
-        <PartnerWeddingDetails />
-      </PartnerLayout>
-    } />
-    <Route path="/manage-clients" element={
-      <PartnerLayout>
-        <PartnerManageClients />
-      </PartnerLayout>
-    } />
-  </Routes>
-);
+// Partner routes with AuthGuard for role-based access
+const PartnerRoutes = () => {
+  return (
+    <Routes>
+      {/* Public auth route */}
+      <Route path="/auth" element={
+        <AuthGuard requireAuth={false}>
+          <PartnerAuth />
+        </AuthGuard>
+      } />
+      
+      {/* Protected routes - only accessible to partners */}
+      <Route path="/" element={
+        <AuthGuard requiredRole="partner">
+          <PartnerLayout>
+            <PartnerWelcome />
+          </PartnerLayout>
+        </AuthGuard>
+      } />
+      
+      <Route path="/dashboard" element={
+        <AuthGuard requiredRole="partner">
+          <PartnerLayout>
+            <PartnerWelcome />
+          </PartnerLayout>
+        </AuthGuard>
+      } />
+      
+      <Route path="/wedding-details" element={
+        <AuthGuard requiredRole="partner">
+          <PartnerLayout>
+            <PartnerWeddingDetails />
+          </PartnerLayout>
+        </AuthGuard>
+      } />
+      
+      <Route path="/manage-clients" element={
+        <AuthGuard requiredRole="partner">
+          <PartnerLayout>
+            <PartnerManageClients />
+          </PartnerLayout>
+        </AuthGuard>
+      } />
+      
+      {/* Catch-all route */}
+      <Route path="*" element={
+        <AuthGuard requiredRole="partner">
+          <PartnerLayout>
+            <PartnerNotFound />
+          </PartnerLayout>
+        </AuthGuard>
+      } />
+    </Routes>
+  );
+};
 
 // Admin routes
 const AdminRoutes = () => (

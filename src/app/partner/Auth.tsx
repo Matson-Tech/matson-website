@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthGuard from "./auth/AuthGuard";
 import { Link } from "react-router-dom";
 import { Heart, Sparkles, ArrowLeft, ArrowRight, Mail, Lock, User, Phone, MapPin, Globe, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,6 +23,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +60,8 @@ export default function Auth() {
         }
 
         toast.success("Successfully logged in!");
+        // Redirect to partner dashboard after successful login
+        navigate("/partner/dashboard");
       } else {
         // Client-side validation
         if (step === 1) {

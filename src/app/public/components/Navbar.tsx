@@ -31,9 +31,36 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMounted, setIsMounted] = useState(false);
   
   // Use the safe wedding context
   const { user, isLoggedIn, logout, globalIsLoading } = useSafeWedding();
+  
+  // Add a small delay to prevent flash of incorrect state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Don't render auth-dependent UI until we've had a chance to check auth state
+  if (!isMounted || globalIsLoading) {
+    return (
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link to="/" className="text-xl font-bold text-matson-red">
+                Matson Celebration Studio
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   const handleLogout = async () => {
     try {
@@ -168,13 +195,27 @@ const Navbar = () => {
                   Sign In
                 </Button>
               )}
-              <Button 
-                size="sm" 
-                onClick={() => isLoggedIn ? navigate('/') : navigate('/get-started')}
-                className="bg-matson-black hover:bg-matson-black/90 text-white"
-              >
-                {isLoggedIn ? 'My Wedding' : 'Get Started'}
-              </Button>
+              {isLoggedIn ? (
+                <Button 
+                  size="sm" 
+                  variant="default"
+                  onClick={() => user?.bride_name && user?.groom_name ? 
+                    navigate('/wedding/edit') : 
+                    navigate('#')}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  {user?.bride_name && user?.groom_name ? 'My Website' : 'Create Website'}
+                </Button>
+              ) : (
+                <Button 
+                  size="sm" 
+                  variant="default"
+                  onClick={() => navigate('/login')}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  Get Started
+                </Button>
+              )}
             </div>
           </div>
 
