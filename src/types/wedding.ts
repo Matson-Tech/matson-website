@@ -7,6 +7,8 @@ export interface AuthUser {
   phone_number?: string;
   created_at?: string;
   updated_at?: string;
+  access_token?: string;
+  refresh_token?: string;
 }
 
 export interface WeddingCouple {
@@ -86,6 +88,8 @@ export interface WeddingData {
   moreInfo: WeddingMoreInfo;
   contact: WeddingContact;
   jeweller: WeddingJeweller;
+  colorScheme?: string;
+  fontFamily?: string;
 }
 
 export interface WeddingWish {

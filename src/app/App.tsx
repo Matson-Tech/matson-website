@@ -22,13 +22,7 @@ import PublicLogin from "./public/login/page";
 // Wedding imports (lazy loaded)
 const WeddingLayout = lazy(() => import("./wedding/layout"));
 
-// Admin imports (lazy loaded)
-const AdminLogin = lazy(() => import("./admin/login/page"));
-const AdminLayout = lazy(() => import("./admin/layout"));
-const CreateUser = lazy(() => import("./admin/create-user/page"));
-const ManageCoupleUsers = lazy(() => import("./admin/manage-couple-users/page"));
-const ManagePartnerUsers = lazy(() => import("./admin/manage-partner-users/page"));
-const Welcome = lazy(() => import("./admin/page"));
+
 
 // Partner imports (lazy loaded)
 const PartnerAuth = lazy(() => import("./partner/Auth"));
@@ -144,32 +138,7 @@ const PartnerRoutes = () => {
   );
 };
 
-// Admin routes
-const AdminRoutes = () => (
-  <Routes>
-    <Route path="/login" element={<AdminLogin />} />
-    <Route path="/" element={
-      <AdminLayout>
-        <Welcome />
-      </AdminLayout>
-    } />
-    <Route path="/create-user" element={
-      <AdminLayout>
-        <CreateUser />
-      </AdminLayout>
-    } />
-    <Route path="/manage-couple-users" element={
-      <AdminLayout>
-        <ManageCoupleUsers />
-      </AdminLayout>
-    } />
-    <Route path="/manage-partner-users" element={
-      <AdminLayout>
-        <ManagePartnerUsers />
-      </AdminLayout>
-    } />
-  </Routes>
-);
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -191,9 +160,7 @@ const App = () => (
                   {/* Partner Routes */}
                   <Route path="/partner/*" element={<PartnerRoutes />} />
                   
-                  {/* Admin Routes */}
-                  <Route path="/admin/*" element={<AdminRoutes />} />
-                  
+                
                   {/* 404 - Not Found */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

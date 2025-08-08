@@ -9,6 +9,8 @@ export interface AuthUser {
     bride_name?: string;
     groom_name?: string;
     phone_number?: string;
+    access_token?: string;
+    refresh_token?: string;
 }
 
 export interface WeddingContextType {

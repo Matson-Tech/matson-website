@@ -477,6 +477,33 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
         supabase.removeChannel(channel);
       };
     }, []);
+
+    /** Listen for web_entries updates for the current user */
+    useEffect(() => {
+      if (!user?.id) return;
+      
+      const channel = supabase.channel('wedding-data-channel');
+      
+      channel.on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'web_entries',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          // payload.new.web_data contains the updated JSON
+          const updatedData = payload.new.web_data as WeddingData;
+          // Update context state
+          setWeddingData(updatedData);
+        }
+      ).subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [user?.id]);
   
     /** Login function */
     const login = useCallback(
@@ -486,7 +513,7 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
             email,
             password,
           });
-  
+          
           if (error) {
             throw error;
           }
@@ -512,8 +539,15 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
             isAuthenticated: true,
             bride_name: profileData?.bride_name || "",
             groom_name: profileData?.groom_name || "",
-            phone_number: profileData?.phone_number || ""
+            phone_number: profileData?.phone_number || "",
+            access_token: data.session?.access_token || "",
+            refresh_token: data.session?.refresh_token || ""
           };
+          
+          console.log("Setting user data with tokens:", {
+            access_token: data.session?.access_token ? 'present' : 'missing',
+            refresh_token: data.session?.refresh_token ? 'present' : 'missing'
+          });
   
           localStorage.setItem("wedding_user", JSON.stringify(userData));
           localStorage.setItem("wedding_isLoggedIn", "true");
