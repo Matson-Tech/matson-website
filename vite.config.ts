@@ -49,13 +49,15 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    "process.env": {},
+  },
   esbuild: {
     minify: false,
   },
   build: {
     sourcemap: true,
     rollupOptions: {
-      external: ["react", "react-dom"],
       output: {
         manualChunks: (id) => {
           // Core React
