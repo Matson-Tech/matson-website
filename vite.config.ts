@@ -54,9 +54,9 @@ export default defineConfig(({ mode }) => ({
             return 'react-vendor';
           }
           
-          // Router
-          if (id.includes('node_modules/react-router-dom')) {
-            return 'router';
+          // Radix UI components (handle them individually to avoid the wildcard issue)
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'radix';
           }
           
           // Form handling
@@ -74,26 +74,11 @@ export default defineConfig(({ mode }) => ({
             return 'query';
           }
           
-          // Utilities
-          if (id.includes('node_modules/clsx') || 
-              id.includes('node_modules/class-variance-authority') || 
+          // UI libraries
+          if (id.includes('node_modules/class-variance-authority') || 
+              id.includes('node_modules/clsx') || 
               id.includes('node_modules/tailwind-merge')) {
-            return 'utils';
-          }
-          
-          // Icons
-          if (id.includes('node_modules/lucide-react')) {
-            return 'icons';
-          }
-          
-          // Animations
-          if (id.includes('node_modules/framer-motion')) {
-            return 'animations';
-          }
-          
-          // Radix UI components
-          if (id.includes('node_modules/@radix-ui')) {
-            return 'ui-components';
+            return 'ui-utils';
           }
           
           // Vendor chunk for other dependencies
@@ -118,19 +103,30 @@ export default defineConfig(({ mode }) => ({
       'react',
       'react-dom',
       'react-router-dom',
+      'react/jsx-runtime',
       'sonner',
+      'lucide-react',
+      '@radix-ui/react-*',
+      'framer-motion',
+      'react-hook-form',
+      '@hookform/resolvers',
+      'zod',
+      '@supabase/supabase-js',
+      '@tanstack/react-query',
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge',
+      'next-themes'
     ],
     exclude: [
-      // Exclude heavy unused dependencies
+      // Only exclude very large dependencies that aren't needed initially
       'recharts',
       'embla-carousel-react',
       'vaul',
       'cmdk',
-      'date-fns',
       'react-day-picker',
       'react-resizable-panels',
       'input-otp',
-      'next-themes',
     ],
   },
 }));
