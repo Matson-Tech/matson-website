@@ -10,6 +10,9 @@ interface SidebarContextType {
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
+// Add display name for better debugging
+SidebarContext.displayName = 'SidebarContext';
+
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   
