@@ -49,8 +49,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  esbuild: {
+    minify: false,
+  },
   build: {
+    sourcemap: true,
     rollupOptions: {
+      external: ["react", "react-dom"],
       output: {
         manualChunks: (id) => {
           // Core React
@@ -100,7 +105,6 @@ export default defineConfig(({ mode }) => ({
       },
     },
     chunkSizeWarningLimit: 500,
-    minify: "terser",
     terserOptions: {
       compress: {
         drop_console: true,
@@ -127,7 +131,6 @@ export default defineConfig(({ mode }) => ({
       "class-variance-authority",
       "clsx",
       "tailwind-merge",
-      "next-themes",
     ],
     exclude: [
       // Only exclude very large dependencies that aren't needed initially
