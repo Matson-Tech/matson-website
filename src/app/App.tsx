@@ -22,8 +22,6 @@ import PublicLogin from "./public/login/page";
 // Wedding imports (lazy loaded)
 const WeddingLayout = lazy(() => import("./wedding/layout"));
 
-
-
 // Partner imports (lazy loaded)
 const PartnerAuth = lazy(() => import("./partner/Auth"));
 const PartnerLayout = lazy(() => import("./partner/Layout"));
@@ -46,11 +44,14 @@ const LoadingSpinner = () => (
 const WeddingRoutes = () => (
   <WeddingProvider>
     <Routes>
-      <Route path="/edit" element={
-        <WeddingLayout>
-          <WeddingEdit />
-        </WeddingLayout>
-      } />
+      <Route
+        path="/edit"
+        element={
+          <WeddingLayout>
+            <WeddingEdit />
+          </WeddingLayout>
+        }
+      />
       {/* Add other wedding routes here */}
     </Routes>
   </WeddingProvider>
@@ -59,26 +60,38 @@ const WeddingRoutes = () => (
 // Public routes without any provider
 const PublicRoutes = () => (
   <Routes>
-    <Route path="/" element={
-      <PublicLayout>
-        <Index />
-      </PublicLayout>
-    } />
-    <Route path="/gallery" element={
-      <PublicLayout>
-        <Gallery />
-      </PublicLayout>
-    } />
-    <Route path="/website" element={
-      <PublicLayout>
-        <Website />
-      </PublicLayout>
-    } />
-    <Route path="/login" element={
-      <PublicLayout>
-        <PublicLogin />
-      </PublicLayout>
-    } />
+    <Route
+      path="/"
+      element={
+        <PublicLayout>
+          <Index />
+        </PublicLayout>
+      }
+    />
+    <Route
+      path="/gallery"
+      element={
+        <PublicLayout>
+          <Gallery />
+        </PublicLayout>
+      }
+    />
+    <Route
+      path="/website"
+      element={
+        <PublicLayout>
+          <Website />
+        </PublicLayout>
+      }
+    />
+    <Route
+      path="/login"
+      element={
+        <PublicLayout>
+          <PublicLogin />
+        </PublicLayout>
+      }
+    />
   </Routes>
 );
 
@@ -87,62 +100,80 @@ const PartnerRoutes = () => {
   return (
     <Routes>
       {/* Public auth route */}
-      <Route path="/auth" element={
-        <AuthGuard requireAuth={false}>
-          <PartnerAuth />
-        </AuthGuard>
-      } />
-      
+      <Route
+        path="/auth"
+        element={
+          <AuthGuard requireAuth={false}>
+            <PartnerAuth />
+          </AuthGuard>
+        }
+      />
+
       {/* Protected routes - only accessible to partners */}
-      <Route path="/" element={
-        <AuthGuard requiredRole="partner">
-          <PartnerLayout>
-            <PartnerWelcome />
-          </PartnerLayout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/dashboard" element={
-        <AuthGuard requiredRole="partner">
-          <PartnerLayout>
-            <PartnerWelcome />
-          </PartnerLayout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/wedding-details" element={
-        <AuthGuard requiredRole="partner">
-          <PartnerLayout>
-            <PartnerWeddingDetails />
-          </PartnerLayout>
-        </AuthGuard>
-      } />
-      
-      <Route path="/manage-clients" element={
-        <AuthGuard requiredRole="partner">
-          <PartnerLayout>
-            <PartnerManageClients />
-          </PartnerLayout>
-        </AuthGuard>
-      } />
-      
+      <Route
+        path="/"
+        element={
+          <AuthGuard requiredRole="partner">
+            <PartnerLayout>
+              <PartnerWelcome />
+            </PartnerLayout>
+          </AuthGuard>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <AuthGuard requiredRole="partner">
+            <PartnerLayout>
+              <PartnerWelcome />
+            </PartnerLayout>
+          </AuthGuard>
+        }
+      />
+
+      <Route
+        path="/wedding-details"
+        element={
+          <AuthGuard requiredRole="partner">
+            <PartnerLayout>
+              <PartnerWeddingDetails />
+            </PartnerLayout>
+          </AuthGuard>
+        }
+      />
+
+      <Route
+        path="/manage-clients"
+        element={
+          <AuthGuard requiredRole="partner">
+            <PartnerLayout>
+              <PartnerManageClients />
+            </PartnerLayout>
+          </AuthGuard>
+        }
+      />
+
       {/* Catch-all route */}
-      <Route path="*" element={
-        <AuthGuard requiredRole="partner">
-          <PartnerLayout>
-            <PartnerNotFound />
-          </PartnerLayout>
-        </AuthGuard>
-      } />
+      <Route
+        path="*"
+        element={
+          <AuthGuard requiredRole="partner">
+            <PartnerLayout>
+              <PartnerNotFound />
+            </PartnerLayout>
+          </AuthGuard>
+        }
+      />
     </Routes>
   );
 };
 
-
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
@@ -153,14 +184,13 @@ const App = () => (
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/*" element={<PublicRoutes />} />
-                  
+
                   {/* Wedding Routes */}
                   <Route path="/wedding/*" element={<WeddingRoutes />} />
-                  
+
                   {/* Partner Routes */}
                   <Route path="/partner/*" element={<PartnerRoutes />} />
-                  
-                
+
                   {/* 404 - Not Found */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
