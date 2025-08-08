@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { WeddingContext, useWedding } from "@/app/wedding/contexts/WeddingContext";
 import ResizableTemplateSidebar from "@/app/wedding/components/sidebar/ResizableTemplateSidebar";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ function SidebarProvider({ children }: { children: React.ReactNode }) {
 
 function DynamicUserWeddingPage() {
   const { session, weddingData } = useContext(WeddingContext) ?? {};
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [iframeUrl, setIframeUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState("model_1");
