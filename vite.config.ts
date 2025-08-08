@@ -6,26 +6,30 @@ import { componentTagger } from "lovable-tagger";
 // Custom plugin to exclude unwanted images during build
 const excludeImagesPlugin = () => {
   return {
-    name: 'exclude-images',
+    name: "exclude-images",
     generateBundle(options: any, bundle: any) {
       // List of files to keep
       const keepFiles = [
-        'matson-icon-qY7ypm7U.png',
-        'hero-wedding-DuoSUXYL.jpg',
-        'index-um8msJ26.css',
-        'index-BZ0xK0Hf.js'
+        "matson-icon-qY7ypm7U.png",
+        "hero-wedding-DuoSUXYL.jpg",
+        "index-um8msJ26.css",
+        "index-BZ0xK0Hf.js",
       ];
-      
+
       // Remove unwanted image files from the bundle
-      Object.keys(bundle).forEach(fileName => {
-        if (fileName.includes('.jpg') || fileName.includes('.png')) {
-          const shouldKeep = keepFiles.some(keepFile => fileName.includes(keepFile.replace(/[-_][a-zA-Z0-9]+\.(jpg|png)/, '')));
+      Object.keys(bundle).forEach((fileName) => {
+        if (fileName.includes(".jpg") || fileName.includes(".png")) {
+          const shouldKeep = keepFiles.some((keepFile) =>
+            fileName.includes(
+              keepFile.replace(/[-_][a-zA-Z0-9]+\.(jpg|png)/, ""),
+            ),
+          );
           if (!shouldKeep) {
             delete bundle[fileName];
           }
         }
       });
-    }
+    },
   };
 };
 
@@ -37,7 +41,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
+    mode === "development" && componentTagger(),
     excludeImagesPlugin(),
   ].filter(Boolean),
   resolve: {
@@ -50,83 +54,90 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           // Core React
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
+          if (
+            id.includes("node_modules/react") ||
+            id.includes("node_modules/react-dom")
+          ) {
+            return "react-vendor";
           }
-          
+
           // Radix UI components (handle them individually to avoid the wildcard issue)
-          if (id.includes('node_modules/@radix-ui')) {
-            return 'radix';
+          if (id.includes("node_modules/@radix-ui")) {
+            return "radix";
           }
-          
+
           // Form handling
-          if (id.includes('node_modules/react-hook-form') || 
-              id.includes('node_modules/@hookform/resolvers') || 
-              id.includes('node_modules/zod')) {
-            return 'form';
+          if (
+            id.includes("node_modules/react-hook-form") ||
+            id.includes("node_modules/@hookform/resolvers") ||
+            id.includes("node_modules/zod")
+          ) {
+            return "form";
           }
-          
+
           // Backend
-          if (id.includes('node_modules/@supabase/supabase-js')) {
-            return 'supabase';
+          if (id.includes("node_modules/@supabase/supabase-js")) {
+            return "supabase";
           }
-          if (id.includes('node_modules/@tanstack/react-query')) {
-            return 'query';
+          if (id.includes("node_modules/@tanstack/react-query")) {
+            return "query";
           }
-          
+
           // UI libraries
-          if (id.includes('node_modules/class-variance-authority') || 
-              id.includes('node_modules/clsx') || 
-              id.includes('node_modules/tailwind-merge')) {
-            return 'ui-utils';
+          if (
+            id.includes("node_modules/class-variance-authority") ||
+            id.includes("node_modules/clsx") ||
+            id.includes("node_modules/tailwind-merge")
+          ) {
+            return "ui-utils";
           }
-          
+
           // Vendor chunk for other dependencies
-          if (id.includes('node_modules')) {
-            return 'vendor';
+          if (id.includes("node_modules")) {
+            return "vendor";
           }
         },
       },
     },
     chunkSizeWarningLimit: 500,
-    minify: 'terser',
+    minify: "terser",
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+        pure_funcs: ["console.log", "console.info", "console.debug"],
       },
     },
   },
   optimizeDeps: {
     include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      'react/jsx-runtime',
-      'sonner',
-      'lucide-react',
-      '@radix-ui/react-*',
-      'framer-motion',
-      'react-hook-form',
-      '@hookform/resolvers',
-      'zod',
-      '@supabase/supabase-js',
-      '@tanstack/react-query',
-      'class-variance-authority',
-      'clsx',
-      'tailwind-merge',
-      'next-themes'
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "react/jsx-runtime",
+      "sonner",
+      "lucide-react",
+      "@radix-ui/react-*",
+      "framer-motion",
+      "react-hook-form",
+      "@hookform/resolvers",
+      "zod",
+      "@supabase/supabase-js",
+      "@tanstack/react-query",
+      "class-variance-authority",
+      "clsx",
+      "tailwind-merge",
+      "next-themes",
     ],
     exclude: [
       // Only exclude very large dependencies that aren't needed initially
-      'recharts',
-      'embla-carousel-react',
-      'vaul',
-      'cmdk',
-      'react-day-picker',
-      'react-resizable-panels',
-      'input-otp',
+      "recharts",
+      "embla-carousel-react",
+      "vaul",
+      "cmdk",
+      "react-day-picker",
+      "react-resizable-panels",
+      "input-otp",
     ],
   },
 }));
