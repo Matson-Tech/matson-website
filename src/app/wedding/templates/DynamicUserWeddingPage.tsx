@@ -9,10 +9,7 @@ import React, {
   useRef,
 } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  WeddingContext,
-  useWedding,
-} from "@/app/wedding/contexts/WeddingContext";
+import { WeddingContext, useWedding } from "@/app/wedding/contexts/WeddingContext";
 import ResizableTemplateSidebar from "@/app/wedding/components/sidebar/ResizableTemplateSidebar";
 import { cn } from "@/lib/utils";
 import type { WeddingData, ScheduleItem } from "@/types/wedding";
@@ -27,14 +24,14 @@ const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function useSidebar() {
   const context = useContext(SidebarContext);
-  if (!context)
-    throw new Error("useSidebar must be used within SidebarProvider");
+  if (!context) throw new Error("useSidebar must be used within SidebarProvider");
   return context;
 }
 
 function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
+  // Close sidebar on "routechange" when viewport is mobile
   useEffect(() => {
     const handleRouteChange = () => {
       if (window.innerWidth < 768) setOpen(false);
@@ -43,11 +40,66 @@ function SidebarProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("routechange", handleRouteChange);
   }, []);
 
-  return (
-    <SidebarContext.Provider value={{ open, setOpen }}>
-      {children}
-    </SidebarContext.Provider>
-  );
+  return <SidebarContext.Provider value={{ open, setOpen }}>{children}</SidebarContext.Provider>;
+}
+
+// Custom hook to manage window width media check and sidebar open toggle on resize
+function useResponsiveSidebar(setOpen: React.Dispatch<React.SetStateAction<boolean>>) {
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
+
+  useEffect(() => {
+    const onResize = () => {
+      const desktop = window.innerWidth >= 768;
+      setIsDesktop(desktop);
+      if (!desktop) setOpen(false);
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [setOpen]);
+
+  useEffect(() => {
+    setOpen(window.innerWidth >= 768);
+  }, [setOpen]);
+
+  return isDesktop;
+}
+
+// Custom hook to handle click outside sidebar on mobile to close it
+function useCloseSidebarOnClickOutside(open: boolean, setOpen: React.Dispatch<React.SetStateAction<boolean>>) {
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (window.innerWidth >= 768) return;
+      const sidebar = document.querySelector("[data-sidebar]");
+      const toggleButton = document.querySelector("[data-toggle-sidebar]");
+      if (
+        sidebar &&
+        !sidebar.contains(e.target as Node) &&
+        toggleButton &&
+        !toggleButton.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open, setOpen]);
+}
+
+// Helper: transforms schedule object into array form, safely
+function transformScheduleToArray(schedule: any): ScheduleItem[] {
+  if (Array.isArray(schedule)) return schedule;
+
+  if (schedule && typeof schedule === "object") {
+    return Object.keys(schedule)
+      .filter((key) => !isNaN(+key))
+      .map((key) => schedule[key])
+      .filter((item: any) => item?.id && item?.time && item?.event)
+      .map(({ id, time, event, description }: any) => ({ id, time, event, description: description || "" }));
+  }
+  return [];
 }
 
 function DynamicUserWeddingPage() {
@@ -56,97 +108,46 @@ function DynamicUserWeddingPage() {
   const [iframeUrl, setIframeUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState("model_1");
-  const [isSaving, setIsSaving] = useState(false);
   const { open, setOpen } = useSidebar();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [sidebarWidth, setSidebarWidth] = useState(320);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
-  // Add pending changes state to track unsaved sidebar modifications
-  const [pendingChanges, setPendingChanges] = useState<Partial<WeddingData>>(
-    {},
-  );
-  
-  // Use ref to access current weddingData without causing re-renders
+  // Responsive / desktop state hook
+  const isDesktop = useResponsiveSidebar(setOpen);
+
+  // Click outside hook for mobile sidebar close
+  useCloseSidebarOnClickOutside(open, setOpen);
+
+  // Track pending changes without causing rerenders on wedding data
+  const [pendingChanges, setPendingChanges] = useState<Partial<WeddingData>>({});
   const weddingDataRef = useRef(weddingData);
-  
-  // Update ref when weddingData changes
   useEffect(() => {
     weddingDataRef.current = weddingData;
   }, [weddingData]);
 
+  // Compose iframe login URL once per session or searchParam updates
   useEffect(() => {
-    const accessToken =
-      searchParams.get("access_token") ?? session?.access_token ?? "";
-    const refreshToken =
-      searchParams.get("refresh_token") ?? session?.refresh_token ?? "";
-
+    const accessToken = searchParams.get("access_token") ?? session?.access_token ?? "";
+    const refreshToken = searchParams.get("refresh_token") ?? session?.refresh_token ?? "";
     const url = new URL("https://template-7.matson.app/login");
-    if (accessToken) url.searchParams.append("access_token", accessToken);
-    if (refreshToken) url.searchParams.append("refresh_token", refreshToken);
-    console.log(url.toString());
-
+    accessToken && url.searchParams.append("access_token", accessToken);
+    refreshToken && url.searchParams.append("refresh_token", refreshToken);
     setIframeUrl(url.toString());
     setIsLoading(false);
   }, [searchParams, session]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (open && window.innerWidth < 768) {
-        const sidebar = document.querySelector("[data-sidebar]");
-        const toggleButton = document.querySelector("[data-toggle-sidebar]");
-        if (
-          sidebar &&
-          !sidebar.contains(e.target as Node) &&
-          toggleButton &&
-          !toggleButton.contains(e.target as Node)
-        ) {
-          setOpen(false);
-        }
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open, setOpen]);
-
-  useEffect(() => {
-    const onResize = () => {
-      const desktop = window.innerWidth >= 768;
-      setIsDesktop(desktop);
-      // Only close sidebar when switching to mobile, don't force open on desktop
-      if (!desktop) {
-        setOpen(false);
-      }
-    };
-    onResize();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [setOpen]);
-
-  // Set initial sidebar state based on screen size
-  useEffect(() => {
-    const desktop = window.innerWidth >= 768;
-    setOpen(desktop);
-  }, [setOpen]);
-
   const { updateWeddingData } = useWedding();
   const { toast } = useToast();
 
-  // Handle field changes from sidebar (for Enter key immediate saves)
+  // Saves a single field immediately
   const handleFieldChange = useCallback(
     async (section: keyof WeddingData, field: string, value: string) => {
       if (!weddingData) return;
-
-      // Create immediate save data for this field
       const immediateData = {
         ...weddingData,
-        [section]: {
-          ...(weddingData[section] as any),
-          [field]: value,
-        },
+        [section]: { ...(weddingData[section] as any), [field]: value },
       };
-
       try {
         const success = await updateWeddingData(immediateData);
         if (success) {
@@ -155,7 +156,6 @@ function DynamicUserWeddingPage() {
             description: `${field} saved successfully.`,
             variant: "default",
           });
-          // Remove this field from pending changes since it's now saved
           setPendingChanges((prev) => {
             const updated = { ...prev };
             if (updated[section]) {
@@ -179,56 +179,52 @@ function DynamicUserWeddingPage() {
         });
       }
     },
-    [weddingData, updateWeddingData, toast],
+    [weddingData, updateWeddingData, toast]
   );
 
-  // Handle pending field changes (for changes without Enter)
+  // Helper: update array in pending changes
+  const updateArrayField = (
+    prev: Partial<WeddingData>,
+    section: keyof WeddingData,
+    index: number,
+    arrayField: string,
+    value: string
+  ) => {
+    const currentArray = (prev[section] as any) ?? (weddingDataRef.current?.[section] as any) ?? [];
+    const newArray = Array.isArray(currentArray) ? [...currentArray] : [];
+    while (newArray.length <= index) {
+      if (section === "schedule") {
+        newArray.push({ id: "", time: "", event: "", description: "" });
+      } else if (section === "gallery") {
+        newArray.push({ url: "", name: "", caption: "" });
+      } else {
+        newArray.push({});
+      }
+    }
+    newArray[index] = { ...newArray[index], [arrayField]: value };
+    return { ...prev, [section]: newArray };
+  };
+
+  // Pending changes handler for inputs without immediate saves; supports array and normal keys
   const handlePendingChange = useCallback(
     (section: keyof WeddingData, field: string, value: string) => {
       setPendingChanges((prev) => {
-        // Handle special array_update field (entire array replacement)
-        if (field === 'array_update') {
+        if (field === "array_update") {
           try {
             const newArray = JSON.parse(value);
             return { ...prev, [section]: newArray };
           } catch (error) {
-            console.error('Failed to parse array update:', error);
+            console.error("Failed to parse array update:", error);
             return prev;
           }
         }
-        
-        // Handle array field updates (e.g., "0.time", "1.event")
-        if (field.includes('.')) {
-          const [indexStr, arrayField] = field.split('.');
+        if (field.includes(".")) {
+          const [indexStr, arrayField] = field.split(".");
           const index = parseInt(indexStr);
-          
           if (!isNaN(index)) {
-            // Get current array data
-            const currentArray = (prev[section] as any) ?? (weddingDataRef.current?.[section] as any) ?? [];
-            const newArray = Array.isArray(currentArray) ? [...currentArray] : [];
-            
-            // Ensure array has enough items
-            while (newArray.length <= index) {
-              if (section === 'schedule') {
-                newArray.push({ id: '', time: '', event: '', description: '' });
-              } else if (section === 'gallery') {
-                newArray.push({ url: '', name: '', caption: '' });
-              } else {
-                newArray.push({});
-              }
-            }
-            
-            // Update the specific field in the array item
-            newArray[index] = {
-              ...newArray[index],
-              [arrayField]: value
-            };
-            
-            return { ...prev, [section]: newArray };
+            return updateArrayField(prev, section, index, arrayField, value);
           }
         }
-        
-        // Handle regular field updates
         const sectionData = {
           ...((prev[section] as any) ?? (weddingDataRef.current?.[section] as any) ?? {}),
         };
@@ -236,119 +232,26 @@ function DynamicUserWeddingPage() {
         return { ...prev, [section]: sectionData };
       });
     },
-    [], // Remove weddingData dependency to prevent callback recreation
+    []
   );
-
-  // Updated save handler to include pending changes
-  const handleSaveTemplate = useCallback(async () => {
-    if (!weddingData) return;
-    setIsSaving(true);
-
-    try {
-      // Merge wedding data with pending changes
-      const savePayload = { ...weddingData };
-      
-      // Apply pending changes with proper array handling
-      Object.keys(pendingChanges).forEach(section => {
-        const sectionChanges = pendingChanges[section as keyof WeddingData];
-        if (Array.isArray(sectionChanges)) {
-          // For array sections (schedule, gallery), replace the entire array
-          savePayload[section as keyof WeddingData] = sectionChanges as any;
-        } else if (sectionChanges && typeof sectionChanges === 'object') {
-          // For object sections, merge the changes
-          const currentSectionData = savePayload[section as keyof WeddingData];
-          savePayload[section as keyof WeddingData] = {
-            ...(currentSectionData && typeof currentSectionData === 'object' ? currentSectionData : {}),
-            ...sectionChanges
-          } as any;
-        }
-      });
-
-      const success = await updateWeddingData(savePayload);
-      if (!success) {
-        console.error("Failed to save wedding data");
-        toast({
-          title: "Error",
-          description: "Failed to save changes. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Clear pending changes since they're now saved
-      setPendingChanges({});
-
-      // Refresh the iframe to show the updated data
-      setIframeKey((k) => k + 1);
-
-      // Show success message
-      toast({
-        title: "Success",
-        description: "Your changes have been saved successfully.",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error("Failed to save wedding data:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while saving.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [weddingData, pendingChanges, updateWeddingData, toast]);
-
-  // Helper function to transform schedule object to array
-  const transformScheduleToArray = (schedule: any): ScheduleItem[] => {
-    if (Array.isArray(schedule)) {
-      return schedule;
-    }
-    
-    if (schedule && typeof schedule === 'object') {
-      // Convert object with numeric keys to array
-      const scheduleArray: ScheduleItem[] = [];
-      
-      // Extract items with numeric keys
-      Object.keys(schedule).forEach(key => {
-        const numKey = parseInt(key);
-        if (!isNaN(numKey) && schedule[key] && typeof schedule[key] === 'object') {
-          const item = schedule[key];
-          if (item.id && item.time && item.event) {
-            scheduleArray.push({
-              id: item.id,
-              time: item.time,
-              event: item.event,
-              description: item.description || ''
-            });
-          }
-        }
-      });
-      
-      return scheduleArray;
-    }
-    
-    return [];
-  };
 
   const handleTemplateChange = useCallback((id: string) => {
     setSelectedTemplate(id);
     setIframeKey((k) => k + 1);
   }, []);
 
-  // Send updated wedding data to iframe whenever data changes
+  // Send wedding data updates to iframe
   useEffect(() => {
     if (iframeRef.current && weddingData) {
       const sanitizedWeddingData = {
-        ...(weddingData && typeof weddingData === 'object' ? weddingData : {}),
+        ...weddingData,
         schedule: transformScheduleToArray(weddingData.schedule),
-        gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : []
+        gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : [],
       };
-      
       iframeRef.current.contentWindow?.postMessage(
         {
           type: "WEDDING_DATA_UPDATE",
-          weddingData: sanitizedWeddingData
+          weddingData: sanitizedWeddingData,
         },
         "*"
       );
@@ -364,6 +267,16 @@ function DynamicUserWeddingPage() {
       </div>
     );
 
+  const sidebarStyles = {
+    width: sidebarWidth,
+    minWidth: 250,
+  };
+
+  const mainContentStyles = {
+    marginLeft: isDesktop ? (open ? `${sidebarWidth}px` : "0") : "0",
+    width: isDesktop ? (open ? `calc(100% - ${sidebarWidth}px)` : "100%") : "100%",
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-100">
       {open && (
@@ -377,11 +290,10 @@ function DynamicUserWeddingPage() {
         <div
           data-sidebar
           className={cn(
-            "fixed md:relative z-30 h-full transition-transform duration-300 ease-in-out",
-            open ? "translate-x-0" : "-translate-x-full",
-            "md:translate-x-0",
+            "fixed z-30 h-full transition-transform duration-300 ease-in-out",
+            open ? "translate-x-0" : "-translate-x-full"
           )}
-          style={{ width: sidebarWidth, minWidth: 250 }}
+          style={sidebarStyles}
         >
           <ResizableTemplateSidebar
             selected={selectedTemplate}
@@ -392,17 +304,18 @@ function DynamicUserWeddingPage() {
             onPendingChange={handlePendingChange}
             pendingChanges={pendingChanges}
             onWidthChange={setSidebarWidth}
+            iframeKey={iframeKey}
+            setIframeKey={setIframeKey}
+            setPendingChanges={setPendingChanges}
           />
         </div>
       )}
 
-      <div 
+      <div
         className="flex-1 flex flex-col h-full overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ 
-          width: open && isDesktop ? `calc(100% - ${sidebarWidth}px)` : '100%'
-        }}
+        style={mainContentStyles}
       >
-        <header className="bg-white border-b border-gray-200 py-3 px-4 md:px-6 flex items-center justify-between">
+        <header className="bg-white border-b border-gray-200 py-3 px-4 md:px-6 flex items-center">
           <div className="flex items-center space-x-4">
             <button
               data-toggle-sidebar
@@ -418,24 +331,11 @@ function DynamicUserWeddingPage() {
                 stroke="currentColor"
                 strokeWidth={2}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-lg font-medium text-gray-800">
-              Website Preview
-            </h1>
+            <h1 className="text-lg font-medium text-gray-800">Website Preview</h1>
           </div>
-          <button
-            className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm disabled:opacity-50"
-            onClick={handleSaveTemplate}
-            disabled={isSaving}
-          >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </button>
         </header>
 
         <div className="flex-1 bg-gray-100 p-4 overflow-auto">
@@ -443,27 +343,29 @@ function DynamicUserWeddingPage() {
             <iframe
               key={iframeKey}
               ref={iframeRef}
-              src={`${iframeUrl}${iframeUrl.includes("?") ? "&" : "?"}template=${encodeURIComponent(selectedTemplate)}`}
+              src={`${iframeUrl}${iframeUrl.includes("?") ? "&" : "?"}template=${encodeURIComponent(
+                selectedTemplate
+              )}`}
               className="w-full h-full border-0"
               title="Wedding Website Preview"
               allow="camera; microphone; fullscreen;"
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"
               referrerPolicy="strict-origin-when-cross-origin"
               onLoad={() => {
-                // Send template change and sanitized wedding data to iframe
-                const sanitizedWeddingData = weddingData ? {
-                  ...weddingData,
-                  schedule: transformScheduleToArray(weddingData.schedule),
-                  gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : []
-                } : null;
-                
+                const sanitizedWeddingData = weddingData
+                  ? {
+                      ...weddingData,
+                      schedule: transformScheduleToArray(weddingData.schedule),
+                      gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : [],
+                    }
+                  : null;
                 iframeRef.current?.contentWindow?.postMessage(
-                  { 
-                    type: "TEMPLATE_CHANGED", 
+                  {
+                    type: "TEMPLATE_CHANGED",
                     template: selectedTemplate,
-                    weddingData: sanitizedWeddingData
+                    weddingData: sanitizedWeddingData,
                   },
-                  "*",
+                  "*"
                 );
                 setIsLoading(false);
               }}

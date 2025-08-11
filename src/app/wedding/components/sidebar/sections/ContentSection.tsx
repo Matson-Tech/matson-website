@@ -39,8 +39,11 @@ const SectionToggle = ({ label, section, formData, setFormData, onFieldChange })
 
 // Reusable nested event component for Wedding Details events
 const EventSection = ({ label, data, onChange }) => (
-  <div className="border border-gray-200 rounded-lg p-3">
-    <h4 className="text-sm font-medium text-gray-700 mb-3">{label}</h4>
+  <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex items-center space-x-2 mb-3">
+      <div className="w-2 h-2 bg-purple-500 rounded-full" />
+      <h4 className="text-sm font-semibold text-gray-700">{label}</h4>
+    </div>
     <div className="space-y-2">
       <TextInput
         label="Title"
@@ -48,7 +51,7 @@ const EventSection = ({ label, data, onChange }) => (
         onChange={v => onChange('title', v)}
         placeholder="Enter event title"
       />
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <TextInput
           label="Date"
           type="date"
@@ -88,8 +91,11 @@ const EventSection = ({ label, data, onChange }) => (
 
 // Reusable component for "To Know" items
 const ToKnowSection = ({ label, data, onChange }) => (
-  <div className="border border-gray-200 rounded-lg p-3">
-    <h4 className="text-sm font-medium text-gray-700 mb-3">{label}</h4>
+  <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex items-center space-x-2 mb-3">
+      <div className="w-2 h-2 bg-blue-500 rounded-full" />
+      <h4 className="text-sm font-semibold text-gray-700">{label}</h4>
+    </div>
     <div className="space-y-2">
       <TextInput
         label="Title"
@@ -110,18 +116,21 @@ const ToKnowSection = ({ label, data, onChange }) => (
 
 // Schedule item component
 const ScheduleItem = ({ item, index, handleArrayUpdate, handleArrayRemove, saveScheduleItem, removeScheduleItem }) => (
-  <div className="border border-gray-200 rounded-lg p-3">
-    <div className="flex justify-between items-center mb-2">
-      <h4 className="text-sm font-medium text-gray-700">Schedule Item {index + 1}</h4>
+  <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex justify-between items-center mb-3">
+      <div className="flex items-center space-x-2">
+        <div className="w-2 h-2 bg-green-500 rounded-full" />
+        <h4 className="text-sm font-semibold text-gray-700">Schedule Item {index + 1}</h4>
+      </div>
       <button
         onClick={() => item.id ? removeScheduleItem(item.id) : handleArrayRemove('schedule', index)}
-        className="text-red-600 hover:text-red-800"
+        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-all duration-200"
       >
-        <Trash2 size={16} />
+        <Trash2 size={14} />
       </button>
     </div>
     <div className="space-y-2">
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <TextInput
           label="Time"
           value={item.time}
@@ -151,11 +160,17 @@ const ScheduleItem = ({ item, index, handleArrayUpdate, handleArrayRemove, saveS
 
 // Gallery item component
 const GalleryItem = ({ item, index, handleArrayUpdate, handleArrayRemove }) => (
-  <div className="border border-gray-200 rounded-lg p-3">
-    <div className="flex justify-between items-center mb-2">
-      <h4 className="text-sm font-medium text-gray-700">Gallery Item {index + 1}</h4>
-      <button onClick={() => handleArrayRemove('gallery', index)} className="text-red-600 hover:text-red-800">
-        <Trash2 size={16} />
+  <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex justify-between items-center mb-3">
+      <div className="flex items-center space-x-2">
+        <div className="w-2 h-2 bg-pink-500 rounded-full" />
+        <h4 className="text-sm font-semibold text-gray-700">Gallery Item {index + 1}</h4>
+      </div>
+      <button 
+        onClick={() => handleArrayRemove('gallery', index)} 
+        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-all duration-200"
+      >
+        <Trash2 size={14} />
       </button>
     </div>
     <div className="space-y-2">
@@ -269,7 +284,7 @@ export const ContentSection: React.FC<{
                 handleArrayAdd('schedule');
               }
             }}
-            className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 flex items-center justify-center gap-2"
+            className="w-full py-3 border-2 border-dashed border-purple-300 rounded-xl text-purple-600 hover:border-purple-400 hover:text-purple-700 hover:bg-purple-50 flex items-center justify-center gap-2 transition-all duration-200 font-semibold text-sm bg-white shadow-sm hover:shadow-md"
           >
             <Plus size={16} /> Add Schedule Item
           </button>
@@ -285,7 +300,7 @@ export const ContentSection: React.FC<{
           ))}
           <button
             onClick={() => handleArrayAdd('gallery')}
-            className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 flex items-center justify-center gap-2"
+            className="w-full py-3 border-2 border-dashed border-pink-300 rounded-xl text-pink-600 hover:border-pink-400 hover:text-pink-700 hover:bg-pink-50 flex items-center justify-center gap-2 transition-all duration-200 font-semibold text-sm bg-white shadow-sm hover:shadow-md"
           >
             <Plus size={16} /> Add Gallery Item
           </button>
