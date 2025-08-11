@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ScheduleItem } from "@/types/wedding";
 import messageOnUpdate, { useCase } from "@/utils/messageOnUpdate";
-import { useWedding } from "./useWedding";
+import useWedding from "@/hooks/useWedding";
 
 const useUpdateSchedule = () => {
     const { weddingData, updateWeddingData } = useWedding();
@@ -17,7 +17,8 @@ const useUpdateSchedule = () => {
         field: keyof ScheduleItem,
         value: string,
     ) => {
-        const updatedSchedule = weddingData.schedule.map((item) =>
+        const schedule = weddingData.schedule || [];
+        const updatedSchedule = schedule.map((item) =>
             item.id === id ? { ...item, [field]: value } : item,
         );
         const isUpdated = await updateWeddingData({
@@ -26,20 +27,30 @@ const useUpdateSchedule = () => {
         messageOnUpdate(isUpdated, field);
     };
 
+    // New function for immediate saves (on Enter key)
+    const saveScheduleItem = async (
+        id: string,
+        field: keyof ScheduleItem,
+        value: string,
+    ) => {
+        await updateScheduleItem(id, field, value);
+    };
+
     const addScheduleItem = () => {
         const newScheduleItem: ScheduleItem = {
             ...newItem,
             id: `${Date.now()}-${crypto.randomUUID()}`,
         };
         updateWeddingData({
-            schedule: [...weddingData.schedule, newScheduleItem],
+            schedule: [...(weddingData.schedule || []), newScheduleItem],
         });
         setNewItem({ time: "", event: "", description: "" });
         setIsAddingItem(false);
     };
 
     const removeScheduleItem = async (id: string) => {
-        const updatedSchedule = weddingData.schedule.filter(
+        const schedule = weddingData.schedule || [];
+        const updatedSchedule = schedule.filter(
             (item) => item.id !== id,
         );
         const isDeleted: boolean = await updateWeddingData({
@@ -51,6 +62,7 @@ const useUpdateSchedule = () => {
     return {
         addScheduleItem,
         updateScheduleItem,
+        saveScheduleItem,
         removeScheduleItem,
         isAddingItem,
         setIsAddingItem,

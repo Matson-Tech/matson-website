@@ -36,6 +36,11 @@ export interface WeddingContextType {
         password: string,
     ) => Promise<{ error: string | null; user: AuthUser | null }>;
     logout: () => Promise<void>;
+    register: (
+        email: string,
+        password: string,
+        userData?: Partial<AuthUser>
+    ) => Promise<{ user: AuthUser | null; error: any }>;
     setIsAuthInitialized: (value: boolean) => void;
 }
 

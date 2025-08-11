@@ -11,7 +11,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/app/wedding/types/custom-types";
 import { WeddingContext } from "./WeddingContext";
-import type { AuthUser, WeddingData, WeddingWish } from "@/types/wedding";
+import type { AuthUser, WeddingData, WeddingWish, ScheduleItem } from "@/types/wedding";
 import uploadImage from "@/utils/UploadImage";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -59,7 +59,7 @@ const defaultWeddingData: WeddingData = {
       title: "Song Requests",
       description: "Help us create the perfect playlist! Send us your song requests and we'll make sure to play your favorites."
     }
-    },
+  },
     schedule: [
       {
         id: "1",
@@ -140,6 +140,38 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
     const navigate = useNavigate();
   
     /** Helper: Save data to Supabase */
+    // Helper function to transform schedule object to array
+    const transformScheduleToArray = (schedule: any): ScheduleItem[] => {
+      if (Array.isArray(schedule)) {
+        return schedule;
+      }
+      
+      if (schedule && typeof schedule === 'object') {
+        // Convert object with numeric keys to array
+        const scheduleArray: ScheduleItem[] = [];
+        
+        // Extract items with numeric keys
+        Object.keys(schedule).forEach(key => {
+          const numKey = parseInt(key);
+          if (!isNaN(numKey) && schedule[key] && typeof schedule[key] === 'object') {
+            const item = schedule[key];
+            if (item.id && item.time && item.event) {
+              scheduleArray.push({
+                id: item.id,
+                time: item.time,
+                event: item.event,
+                description: item.description || ''
+              });
+            }
+          }
+        });
+        
+        return scheduleArray;
+      }
+      
+      return [];
+    };
+
     const saveData = useCallback(
       async (data: WeddingData): Promise<boolean> => {
         if (!user?.id) {
@@ -147,10 +179,17 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
           return false;
         }
         try {
+          // Sanitize data before saving to ensure schedule is always an array
+          const sanitizedData = {
+            ...data,
+            schedule: transformScheduleToArray(data.schedule),
+            gallery: Array.isArray(data.gallery) ? data.gallery : []
+          };
+          
           const { error } = await supabase.from("web_entries").upsert(
             {
               user_id: user.id,
-              web_data: data as unknown as Json,
+              web_data: sanitizedData as unknown as Json,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "user_id" }
@@ -189,7 +228,14 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
           }
   
           if (data?.web_data) {
-            setWeddingData(data.web_data as WeddingData);
+            // Sanitize loaded data to ensure schedule and gallery are always arrays
+            const loadedData = data.web_data as WeddingData;
+            const sanitizedData = {
+              ...loadedData,
+              schedule: transformScheduleToArray(loadedData.schedule),
+              gallery: Array.isArray(loadedData.gallery) ? loadedData.gallery : []
+            };
+            setWeddingData(sanitizedData);
           }
   
           // If on wishes path, load wishes for this user variant
@@ -495,8 +541,14 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
         (payload) => {
           // payload.new.web_data contains the updated JSON
           const updatedData = payload.new.web_data as WeddingData;
+          // Sanitize realtime data to ensure schedule and gallery are always arrays
+          const sanitizedData = {
+            ...updatedData,
+            schedule: transformScheduleToArray(updatedData.schedule),
+            gallery: Array.isArray(updatedData.gallery) ? updatedData.gallery : []
+          };
           // Update context state
-          setWeddingData(updatedData);
+          setWeddingData(sanitizedData);
         }
       ).subscribe();
       
@@ -609,29 +661,56 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
         password: string,
         userData: Partial<AuthUser> = {}
       ) => {
+        console.log("Registering user with data:", {
+          email,
+          password,
+          userData,
+        });
         try {
+          // Step 1: Create Auth account
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: {
-              data: {
-                ...userData,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            },
           });
-  
+
           if (error) throw error;
-          if (data.user) {
-            setUser(data.user as unknown as AuthUser);
-            setSession(data.session);
-            setIsLoggedIn(true);
-            await loadWeddingData(data.user.id);
-  
-            return { user: data.user, error: null };
-          }
-          throw new Error("User creation failed without error");
+          if (!data.user?.id) throw new Error("User creation failed: No user ID returned");
+          console.log("User created successfully:", data);
+          console.log("user_data:",userData);
+
+          // Step 2: Insert into user_profile table
+          const { error: profileError } = await supabase
+            .from("user_profile")
+            .insert([
+              {
+                user_id: data.user.id,
+                email,
+                bride_name: userData.bride_name || "",
+                groom_name: userData.groom_name || "",
+                phone_number: userData.phone_number || "",
+              },
+            ]);
+
+          if (profileError) throw new Error(`Profile insertion failed: ${profileError.message}`);
+
+          // Build AuthUser object
+          const authUser: AuthUser = {
+            id: data.user.id,
+            email: data.user.email || email,
+            isAuthenticated: true,
+            bride_name: userData.bride_name || "",
+            groom_name: userData.groom_name || "",
+            phone_number: userData.phone_number || "",
+            access_token: data.session?.access_token || "",
+            refresh_token: data.session?.refresh_token || ""
+          };
+
+          setUser(authUser);
+          setSession(data.session);
+          setIsLoggedIn(true);
+          await loadWeddingData(data.user.id);
+
+          return { user: authUser, error: null };
         } catch (error) {
           console.error("Registration error:", error);
           toast.error("Registration failed. Please try again.");

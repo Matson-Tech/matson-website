@@ -22,6 +22,7 @@ export interface WeddingStory {
   title: string;
   content: string;
   image: string;
+  disabled?: boolean;
 }
 
 export interface WeddingEvent {
@@ -44,6 +45,7 @@ export interface WeddingDetails {
   toKnow1: WeddingToKnow;
   toKnow2: WeddingToKnow;
   toKnow3: WeddingToKnow;
+  disabled?: boolean;
 }
 
 export interface ScheduleItem {
@@ -63,6 +65,7 @@ export interface GalleryImage {
 export interface WeddingMoreInfo {
   title: string;
   content: string;
+  disabled?: boolean;
 }
 
 export interface WeddingContact {
@@ -70,6 +73,7 @@ export interface WeddingContact {
   email: string;
   address: string;
   addressMapLink: string;
+  disabled?: boolean;
 }
 
 export interface WeddingJeweller {
