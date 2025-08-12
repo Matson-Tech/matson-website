@@ -773,7 +773,7 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
     const contextValue = useMemo(
       () => ({
         weddingData,
-        weddingWishes,
+        weddingWishes, 
         user,
         session,
         isLoggedIn,
