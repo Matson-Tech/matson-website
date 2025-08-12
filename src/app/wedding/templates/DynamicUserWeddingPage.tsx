@@ -110,7 +110,7 @@ function DynamicUserWeddingPage() {
   const [selectedTemplate, setSelectedTemplate] = useState("model_1");
   const { open, setOpen } = useSidebar();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [iframeKey, setIframeKey] = useState(0);
+
   const [sidebarWidth, setSidebarWidth] = useState(320);
 
   // Responsive / desktop state hook
@@ -237,7 +237,6 @@ function DynamicUserWeddingPage() {
 
   const handleTemplateChange = useCallback((id: string) => {
     setSelectedTemplate(id);
-    setIframeKey((k) => k + 1);
   }, []);
 
   // Send wedding data updates to iframe
@@ -304,8 +303,6 @@ function DynamicUserWeddingPage() {
             onPendingChange={handlePendingChange}
             pendingChanges={pendingChanges}
             onWidthChange={setSidebarWidth}
-            iframeKey={iframeKey}
-            setIframeKey={setIframeKey}
             setPendingChanges={setPendingChanges}
           />
         </div>
@@ -341,7 +338,6 @@ function DynamicUserWeddingPage() {
         <div className="flex-1 bg-gray-100 p-4 overflow-auto">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full">
             <iframe
-              key={iframeKey}
               ref={iframeRef}
               src={`${iframeUrl}${iframeUrl.includes("?") ? "&" : "?"}template=${encodeURIComponent(
                 selectedTemplate

@@ -80,8 +80,6 @@ interface ResizableTemplateSidebarProps {
   onPendingChange: (section: keyof WeddingData, field: string, value: string) => void;
   pendingChanges: Partial<WeddingData>;
   onWidthChange?: (width: number) => void;
-  iframeKey: number;
-  setIframeKey: (key: number | ((prev: number) => number)) => void;
   setPendingChanges: React.Dispatch<React.SetStateAction<Partial<WeddingData>>>;
 }
 
@@ -94,8 +92,6 @@ export default function ResizableTemplateSidebar({
   onPendingChange,
   pendingChanges,
   onWidthChange,
-  iframeKey,
-  setIframeKey,
   setPendingChanges
 }: ResizableTemplateSidebarProps) {
   const { isResizing, sidebarWidth, sidebarRef, startResizing } = useResizableSidebar();
@@ -130,6 +126,7 @@ export default function ResizableTemplateSidebar({
         handleArrayUpdate={formHandlers.handleArrayUpdate}
         handleArrayAdd={formHandlers.handleArrayAdd}
         handleArrayRemove={formHandlers.handleArrayRemove}
+        onPendingChange={onPendingChange}
       />
     );
     return <SettingsTab />;
@@ -163,8 +160,6 @@ export default function ResizableTemplateSidebar({
       <FloatingSaveButton
         weddingData={weddingData}
         pendingChanges={pendingChanges}
-        iframeKey={iframeKey}
-        setIframeKey={setIframeKey}
         setPendingChanges={setPendingChanges}
       />
       {isResizing && <div className="fixed inset-0 cursor-col-resize z-50" />}

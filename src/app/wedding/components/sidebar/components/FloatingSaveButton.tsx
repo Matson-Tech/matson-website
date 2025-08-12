@@ -7,8 +7,6 @@ interface FloatingSaveButtonProps {
   weddingData: WeddingData | null;
   pendingChanges: Partial<WeddingData>;
   onSaveComplete?: () => void;
-  iframeKey: number;
-  setIframeKey: React.Dispatch<React.SetStateAction<number>>;
   setPendingChanges: React.Dispatch<React.SetStateAction<Partial<WeddingData>>>;
 }
 
@@ -34,13 +32,13 @@ export default function FloatingSaveButton({
   weddingData,
   pendingChanges,
   onSaveComplete,
-  setIframeKey,
   setPendingChanges
 }: FloatingSaveButtonProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { updateWeddingData } = useWedding();
   const { toast } = useToast();
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
+  console.log("pendingChanges", pendingChanges)
 
   const handleSaveTemplate = useCallback(async () => {
     if (!weddingData) return;
@@ -53,7 +51,6 @@ export default function FloatingSaveButton({
         return;
       }
       setPendingChanges({});
-      setIframeKey(k => k + 1);
       toast({ title: "Success", description: "Your changes have been saved successfully.", variant: "default" });
       onSaveComplete?.();
     } catch (error) {
@@ -62,7 +59,7 @@ export default function FloatingSaveButton({
     } finally {
       setIsSaving(false);
     }
-  }, [weddingData, pendingChanges, updateWeddingData, toast, setIframeKey, setPendingChanges, onSaveComplete]);
+  }, [weddingData, pendingChanges, updateWeddingData, toast, setPendingChanges, onSaveComplete]);
 
   // Temporarily always show the button for debugging
   // if (!hasPendingChanges && !isSaving) return null;

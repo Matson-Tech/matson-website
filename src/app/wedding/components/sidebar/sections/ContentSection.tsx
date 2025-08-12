@@ -10,9 +10,14 @@ import useUpdateMoreInfo from '../../../hooks/useUpdateMoreInfo';
 import type { FormData } from '../hooks/useSidebarForm';
 
 // Custom hook for binding input fields to form data and update functions
-const useBoundField = (setFormData, updateFn, section, field) => ({
-  onChange: (val: string) =>
-    setFormData(prev => ({ ...prev, [section]: { ...prev[section], [field]: val } })),
+const useBoundField = (setFormData, updateFn, section, field, onPendingChange?) => ({
+  onChange: (val: string) => {
+    setFormData(prev => ({ ...prev, [section]: { ...prev[section], [field]: val } }));
+    // Track pending changes for non-Enter key changes
+    if (onPendingChange) {
+      onPendingChange(section, field, val);
+    }
+  },
   onKeyDown: (e: React.KeyboardEvent) => {
     const isTextArea = e.currentTarget instanceof HTMLTextAreaElement;
     if (e.key === 'Enter' && (!isTextArea || !e.shiftKey)) {
@@ -54,15 +59,15 @@ const EventSection = ({ label, data, onChange }) => (
       <div className="grid grid-cols-2 gap-2">
         <TextInput
           label="Date"
-          type="date"
           value={data?.date || ''}
           onChange={v => onChange('date', v)}
+          placeholder="e.g., June 10, 2020"
         />
         <TextInput
           label="Time"
-          type="time"
           value={data?.time || ''}
           onChange={v => onChange('time', v)}
+          placeholder="e.g., 5:00 PM"
         />
       </div>
       <TextInput
@@ -190,6 +195,7 @@ export const ContentSection: React.FC<{
   handleArrayUpdate: (section: string, index: number, field: string, value: any) => void;
   handleArrayAdd: (section: string) => void;
   handleArrayRemove: (section: string, index: number) => void;
+  onPendingChange?: (section: string, field: string, value: any) => void;
 }> = ({
   formData,
   expandedSections,
@@ -199,7 +205,8 @@ export const ContentSection: React.FC<{
   handleInputChange,
   handleArrayUpdate,
   handleArrayAdd,
-  handleArrayRemove
+  handleArrayRemove,
+  onPendingChange
 }) => {
   const { saveScheduleItem, addScheduleItem, removeScheduleItem } = useUpdateSchedule();
   const { updateGroomName, updateBrideName, updateWeddingQuote } = useUpdateCouple();
@@ -216,6 +223,8 @@ export const ContentSection: React.FC<{
         [key]: { ...prev.weddingDetails[key], [field]: value }
       }
     }));
+    // Trigger pending changes tracking
+    onPendingChange?.('weddingDetails', `${key}.${field}`, value);
   };
 
   return (
@@ -223,9 +232,9 @@ export const ContentSection: React.FC<{
       {/* Couple Section */}
       <CollapsibleSection title="Couple Information" isExpanded={expandedSections.couple} onToggle={() => toggleSection('couple')}>
         <div className="space-y-4">
-          <TextInput label="Groom's Name" value={formData.couple.groomName} {...useBoundField(setFormData, updateGroomName, 'couple', 'groomName')} placeholder="Enter groom's name" />
-          <TextInput label="Bride's Name" value={formData.couple.brideName} {...useBoundField(setFormData, updateBrideName, 'couple', 'brideName')} placeholder="Enter bride's name" />
-          <TextArea label="Wedding Quote" value={formData.couple.weddingQuote} {...useBoundField(setFormData, updateWeddingQuote, 'couple', 'weddingQuote')} rows={3} placeholder="Enter wedding quote" />
+          <TextInput label="Groom's Name" value={formData.couple.groomName} {...useBoundField(setFormData, updateGroomName, 'couple', 'groomName', onPendingChange)} placeholder="Enter groom's name" />
+          <TextInput label="Bride's Name" value={formData.couple.brideName} {...useBoundField(setFormData, updateBrideName, 'couple', 'brideName', onPendingChange)} placeholder="Enter bride's name" />
+          <TextArea label="Wedding Quote" value={formData.couple.weddingQuote} {...useBoundField(setFormData, updateWeddingQuote, 'couple', 'weddingQuote', onPendingChange)} rows={3} placeholder="Enter wedding quote" />
           <ImageUpload label="Couple Image" value={formData.couple.image} onChange={val => setFormData(prev => ({ ...prev, couple: { ...prev.couple, image: val } }))} />
         </div>
       </CollapsibleSection>
@@ -234,8 +243,8 @@ export const ContentSection: React.FC<{
       <CollapsibleSection title="Story Section" isExpanded={expandedSections.story} onToggle={() => toggleSection('story')}>
         <div className="space-y-4">
           <SectionToggle label="Enable Story Section" section="story" {...{ formData, setFormData, onFieldChange }} />
-          <TextInput label="Story Title" value={formData.story.title} {...useBoundField(setFormData, updateStoryTitle, 'story', 'title')} placeholder="Enter story title" />
-          <TextArea label="Story Content" value={formData.story.content} {...useBoundField(setFormData, updateStoryContent, 'story', 'content')} rows={4} placeholder="Tell your love story" />
+          <TextInput label="Story Title" value={formData.story.title} {...useBoundField(setFormData, updateStoryTitle, 'story', 'title', onPendingChange)} placeholder="Enter story title" />
+          <TextArea label="Story Content" value={formData.story.content} {...useBoundField(setFormData, updateStoryContent, 'story', 'content', onPendingChange)} rows={4} placeholder="Tell your love story" />
           <ImageUpload label="Story Image" value={formData.story.image} onChange={val => setFormData(prev => ({ ...prev, story: { ...prev.story, image: val } }))} />
         </div>
       </CollapsibleSection>
@@ -311,8 +320,8 @@ export const ContentSection: React.FC<{
       <CollapsibleSection title="More Info Section" isExpanded={expandedSections.moreInfo} onToggle={() => toggleSection('moreInfo')}>
         <div className="space-y-4">
           <SectionToggle label="Enable More Info Section" section="moreInfo" {...{ formData, setFormData, onFieldChange }} />
-          <TextInput label="Title" value={formData.moreInfo.title} {...useBoundField(setFormData, updateMoreInfoTitle, 'moreInfo', 'title')} placeholder="Enter more info title" />
-          <TextArea label="Content" value={formData.moreInfo.content} {...useBoundField(setFormData, updateMoreInfoContent, 'moreInfo', 'content')} rows={4} placeholder="Enter more info content" />
+          <TextInput label="Title" value={formData.moreInfo.title} {...useBoundField(setFormData, updateMoreInfoTitle, 'moreInfo', 'title', onPendingChange)} placeholder="Enter more info title" />
+          <TextArea label="Content" value={formData.moreInfo.content} {...useBoundField(setFormData, updateMoreInfoContent, 'moreInfo', 'content', onPendingChange)} rows={4} placeholder="Enter more info content" />
         </div>
       </CollapsibleSection>
 
@@ -320,9 +329,9 @@ export const ContentSection: React.FC<{
       <CollapsibleSection title="Contact Information" isExpanded={expandedSections.contact} onToggle={() => toggleSection('contact')}>
         <div className="space-y-4">
           <SectionToggle label="Enable Contact Section" section="contact" {...{ formData, setFormData, onFieldChange }} />
-          <TextInput label="Email" type="email" value={formData.contact.email} {...useBoundField(setFormData, v => updateContact('email', v), 'contact', 'email')} placeholder="Enter email address" />
-          <TextInput label="Phone" type="tel" value={formData.contact.phone} {...useBoundField(setFormData, v => updateContact('phone', v), 'contact', 'phone')} placeholder="Enter phone number" />
-          <TextArea label="Address" value={formData.contact.address} {...useBoundField(setFormData, v => updateContact('address', v), 'contact', 'address')} rows={2} placeholder="Enter address" />
+          <TextInput label="Email" type="email" value={formData.contact.email} {...useBoundField(setFormData, v => updateContact('email', v), 'contact', 'email', onPendingChange)} placeholder="Enter email address" />
+          <TextInput label="Phone" type="tel" value={formData.contact.phone} {...useBoundField(setFormData, v => updateContact('phone', v), 'contact', 'phone', onPendingChange)} placeholder="Enter phone number" />
+          <TextArea label="Address" value={formData.contact.address} {...useBoundField(setFormData, v => updateContact('address', v), 'contact', 'address', onPendingChange)} rows={2} placeholder="Enter address" />
           <TextInput label="Address Map Link" type="url" value={formData.contact.addressMapLink} onChange={v => handleInputChange('contact', 'addressMapLink', v)} onKeyDown={e => handleInputChange('contact', 'addressMapLink', (e.target as HTMLInputElement).value, e)} placeholder="Enter map link URL" />
         </div>
       </CollapsibleSection>
