@@ -89,6 +89,26 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
+  const handleNavClick = (item: { name: string; path: string }) => {
+    // If we're not on the home page, navigate to home first
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation to complete, then scroll to section
+      setTimeout(() => {
+        const target = document.querySelector(item.path);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      // If already on home page, just scroll to section
+      const target = document.querySelector(item.path);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <nav className="bg-white border-b border-border sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
@@ -102,10 +122,7 @@ const Navbar = () => {
                 className="text-sm font-medium transition-all duration-300 hover:text-primary relative text-foreground group py-2 px-3 rounded-lg hover:bg-primary/5"
                 onClick={(e) => {
                   e.preventDefault();
-                  const target = document.querySelector(item.path);
-                  if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                  }
+                  handleNavClick(item);
                 }}
               >
                 {item.name}
@@ -243,10 +260,7 @@ const Navbar = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     setIsOpen(false);
-                    const target = document.querySelector(item.path);
-                    if (target) {
-                      target.scrollIntoView({ behavior: 'smooth' });
-                    }
+                    handleNavClick(item);
                   }}
                   className="text-sm font-medium py-3 px-4 rounded-lg transition-all duration-300 hover:bg-primary/5 hover:text-primary flex items-center space-x-3 text-foreground group hover:shadow-sm"
                 >

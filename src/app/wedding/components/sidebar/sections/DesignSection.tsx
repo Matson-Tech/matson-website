@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CollapsibleSection } from '../components/CollapsibleSection';
-import { templates, designOptions } from '../constants/sidebarConstants';
+import { designOptions } from '../constants/sidebarConstants';
 import { getColorValue } from '../utils/formHandlers';
 import type { WeddingData } from '@/types/wedding';
 import type { FormData } from '../hooks/useSidebarForm';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Template {
+  id: number;
+  template_name: string;
+  template_url: string;
+  description: string | null;
+}
 
 interface DesignSectionProps {
   selected: string;
@@ -24,36 +32,71 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
   onFieldChange,
   setFormData
 }) => {
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('wedding_template')
+          .select('*')
+          .order('id');
+
+        if (error) {
+          console.error('Error fetching templates:', error);
+          return;
+        }
+
+        setTemplates(data || []);
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
   return (
     <>
       {/* Enhanced Templates Section */}
       <CollapsibleSection title="🎨 Templates" isExpanded={expandedSections.templates} onToggle={() => toggleSection('templates')}>
-        <div className="grid grid-cols-2 gap-3">
-          {templates.map(t => (
-            <div key={t.key} className="relative">
-              <button
-                onClick={() => setSelected(t.key)}
-                className={`relative rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-md ${
-                  selected === t.key 
-                    ? 'border-purple-500 shadow-lg ring-2 ring-purple-200' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <img src={t.preview} alt={t.label} className="w-full h-20 object-cover" />
-                <div className={`p-2 text-xs font-medium transition-colors ${
-                  selected === t.key ? 'text-purple-700 bg-purple-50' : 'text-gray-700 bg-white'
-                }`}>
-                  {t.label}
-                </div>
-                {selected === t.key && (
-                  <div className="absolute top-1 right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">✓</span>
+        {isLoadingTemplates ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {templates.map(template => (
+              <div key={template.id} className="relative">
+                <button
+                  onClick={() => setSelected(`template_${template.id}`)}
+                  className={`relative rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-md ${
+                    selected === `template_${template.id}` 
+                      ? 'border-purple-500 shadow-lg ring-2 ring-purple-200' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="w-full h-20 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <span className="text-purple-600 font-semibold text-sm">{template.template_name}</span>
                   </div>
-                )}
-              </button>
-            </div>
-          ))}
-        </div>
+                  <div className={`p-2 text-xs font-medium transition-colors ${
+                    selected === `template_${template.id}` ? 'text-purple-700 bg-purple-50' : 'text-gray-700 bg-white'
+                  }`}>
+                    {template.template_name}
+                  </div>
+                  {selected === `template_${template.id}` && (
+                    <div className="absolute top-1 right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">✓</span>
+                    </div>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </CollapsibleSection>
 
       {/* Enhanced Color Scheme */}

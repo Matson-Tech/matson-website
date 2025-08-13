@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import { WeddingContext, useWedding } from "@/app/wedding/contexts/WeddingContext";
 import ResizableTemplateSidebar from "@/app/wedding/components/sidebar/ResizableTemplateSidebar";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import type { WeddingData, ScheduleItem } from "@/types/wedding";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -107,7 +108,8 @@ function DynamicUserWeddingPage() {
   const [searchParams] = useSearchParams();
   const [iframeUrl, setIframeUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState("model_1");
+  const [selectedTemplate, setSelectedTemplate] = useState("template_1");
+  const [templateUrl, setTemplateUrl] = useState("https://template-7.matson.app");
   const { open, setOpen } = useSidebar();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -126,16 +128,45 @@ function DynamicUserWeddingPage() {
     weddingDataRef.current = weddingData;
   }, [weddingData]);
 
+  // Fetch template URL when selectedTemplate changes
+  useEffect(() => {
+    const fetchTemplateUrl = async () => {
+      if (selectedTemplate.startsWith('template_')) {
+        const templateId = selectedTemplate.replace('template_', '');
+        try {
+          const { data, error } = await supabase
+            .from('wedding_template')
+            .select('template_url')
+            .eq('id', parseInt(templateId))
+            .single();
+
+          if (error) {
+            console.error('Error fetching template URL:', error);
+            return;
+          }
+
+          if (data?.template_url) {
+            setTemplateUrl(data.template_url);
+          }
+        } catch (error) {
+          console.error('Error fetching template URL:', error);
+        }
+      }
+    };
+
+    fetchTemplateUrl();
+  }, [selectedTemplate]);
+
   // Compose iframe login URL once per session or searchParam updates
   useEffect(() => {
     const accessToken = searchParams.get("access_token") ?? session?.access_token ?? "";
     const refreshToken = searchParams.get("refresh_token") ?? session?.refresh_token ?? "";
-    const url = new URL("https://template-7.matson.app/login");
+    const url = new URL(`${templateUrl}/login`);
     accessToken && url.searchParams.append("access_token", accessToken);
     refreshToken && url.searchParams.append("refresh_token", refreshToken);
     setIframeUrl(url.toString());
     setIsLoading(false);
-  }, [searchParams, session]);
+  }, [searchParams, session, templateUrl]);
 
   const { updateWeddingData } = useWedding();
   const { toast } = useToast();

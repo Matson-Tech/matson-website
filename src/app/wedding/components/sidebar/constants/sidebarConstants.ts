@@ -1,10 +1,5 @@
-// Template data
-export const templates = [
-  { key: "model_1", label: "Template 1", preview: "/placeholder.svg" },
-  { key: "model_2", label: "Template 2", preview: "/placeholder.svg" },
-  { key: "model_3", label: "Template 3", preview: "/placeholder.svg" },
-  { key: "model_4", label: "Template 4", preview: "/placeholder.svg" },
-];
+// Remove the hardcoded templates array since we're now fetching from database
+// export const templates = [...]; // Remove this
 
 // Design options
 export const designOptions = {
