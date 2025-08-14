@@ -15,6 +15,7 @@ import NotFound from "@/app/public/NotFound";
 const Gallery = lazy(() => import("./public/Gallery"));
 const Website = lazy(() => import("./public/website"));
 const WeddingEdit = lazy(() => import("./wedding/edit/page"));
+const PartnerReports = lazy(() => import("./partner/Reports"));
 
 // Import login page directly for now
 import PublicLogin from "./public/login/page";
@@ -149,6 +150,17 @@ const PartnerRoutes = () => {
           <AuthGuard requiredRole="partner">
             <PartnerLayout>
               <PartnerManageClients />
+            </PartnerLayout>
+          </AuthGuard>
+        }
+      />
+
+      <Route
+        path="/reports"
+        element={
+          <AuthGuard requiredRole="partner">
+            <PartnerLayout>
+              <PartnerReports />
             </PartnerLayout>
           </AuthGuard>
         }
