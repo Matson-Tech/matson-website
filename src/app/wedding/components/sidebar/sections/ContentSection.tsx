@@ -2,7 +2,7 @@ import React from 'react';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { TextInput, TextArea, ToggleSwitch, ImageUpload } from '../components/FormComponents';
 import { Plus, Trash2 } from 'lucide-react';
-import useUpdateSchedule from '@/app/wedding/hooks/useupdateschedule.tsx';
+import useUpdateSchedule from '@/app/wedding/hooks/useupdateschedule';
 import useUpdateCouple from '@/app/wedding/hooks/useUpdateCouple';
 import useUpdateStory from '@/app/wedding/hooks/useUpdateStory';
 import useUpdateContacts from '@/app/wedding/hooks/useUpdateContacts';
