@@ -2,11 +2,11 @@ import React from 'react';
 import { CollapsibleSection } from '../components/CollapsibleSection';
 import { TextInput, TextArea, ToggleSwitch, ImageUpload } from '../components/FormComponents';
 import { Plus, Trash2 } from 'lucide-react';
-import useUpdateSchedule from '../../../hooks/useupdateschedule';
-import useUpdateCouple from '../../../hooks/useUpdateCouple';
-import useUpdateStory from '../../../hooks/useUpdateStory';
-import useUpdateContacts from '../../../hooks/useUpdateContacts';
-import useUpdateMoreInfo from '../../../hooks/useUpdateMoreInfo';
+import useUpdateSchedule from '@/app/wedding/hooks/useupdateschedule';
+import useUpdateCouple from '@/app/wedding/hooks/useUpdateCouple';
+import useUpdateStory from '@/app/wedding/hooks/useUpdateStory';
+import useUpdateContacts from '@/app/wedding/hooks/useUpdateContacts';
+import useUpdateMoreInfo from '@/app/wedding/hooks/useUpdateMoreInfo';
 import type { FormData } from '../hooks/useSidebarForm';
 
 // Custom hook for binding input fields to form data and update functions
