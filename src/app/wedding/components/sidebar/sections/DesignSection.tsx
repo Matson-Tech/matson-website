@@ -7,7 +7,7 @@ import type { FormData } from '../hooks/useSidebarForm';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Template {
-  id: number;
+  template_id: string; // Changed from id to template_id (UUID)
   template_name: string;
   template_url: string;
   description: string | null;
@@ -20,6 +20,7 @@ interface DesignSectionProps {
   expandedSections: Record<string, boolean>;
   toggleSection: (section: string) => void;
   onFieldChange: (section: keyof WeddingData, field: string, value: string | boolean) => void;
+  onPendingChange: (section: keyof WeddingData, field: string, value: string) => void; // Add this
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
@@ -30,6 +31,7 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
   expandedSections,
   toggleSection,
   onFieldChange,
+  onPendingChange, // Add this
   setFormData
 }) => {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -40,8 +42,8 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
       try {
         const { data, error } = await supabase
           .from('wedding_template')
-          .select('*')
-          .order('id');
+          .select('template_id, template_name, template_url, description')
+          .order('template_name');
 
         if (error) {
           console.error('Error fetching templates:', error);
@@ -70,11 +72,14 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {templates.map(template => (
-              <div key={template.id} className="relative">
+              <div key={template.template_id} className="relative">
                 <button
-                  onClick={() => setSelected(`template_${template.id}`)}
+                  onClick={() => {
+                    setSelected(template.template_id); // Preview only
+                    // Remove the onPendingChange call for template_id
+                  }}
                   className={`relative rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-md ${
-                    selected === `template_${template.id}` 
+                    selected === template.template_id 
                       ? 'border-purple-500 shadow-lg ring-2 ring-purple-200' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
@@ -83,11 +88,11 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
                     <span className="text-purple-600 font-semibold text-sm">{template.template_name}</span>
                   </div>
                   <div className={`p-2 text-xs font-medium transition-colors ${
-                    selected === `template_${template.id}` ? 'text-purple-700 bg-purple-50' : 'text-gray-700 bg-white'
+                    selected === template.template_id ? 'text-purple-700 bg-purple-50' : 'text-gray-700 bg-white'
                   }`}>
                     {template.template_name}
                   </div>
-                  {selected === `template_${template.id}` && (
+                  {selected === template.template_id && (
                     <div className="absolute top-1 right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">✓</span>
                     </div>
@@ -106,9 +111,7 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
             <button
               key={color.value}
               onClick={() => {
-                // Update local state immediately
                 setFormData(prev => ({ ...prev, colorScheme: color.value }));
-                // Save immediately for design choices
                 onFieldChange('colorScheme' as keyof WeddingData, 'colorScheme', color.value);
               }}
               className={`relative w-12 h-12 rounded-lg transition-all duration-200 hover:scale-105 ${
@@ -130,16 +133,13 @@ export const DesignSection: React.FC<DesignSectionProps> = ({
         </div>
       </CollapsibleSection>
 
-      {/* Enhanced Font Style */}
       <CollapsibleSection title="✍️ Font Style" isExpanded={expandedSections.fonts} onToggle={() => toggleSection('fonts')}>
         <div className="space-y-3">
           {designOptions.fonts.map((font) => (
             <button
               key={font.value}
               onClick={() => {
-                // Update local state immediately
                 setFormData(prev => ({ ...prev, fontStyle: font.value }));
-                // Save immediately for design choices
                 onFieldChange('fontStyle' as keyof WeddingData, 'fontStyle', font.value);
               }}
               className={`w-full text-left p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${

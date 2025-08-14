@@ -7,6 +7,7 @@ import { DesignSection } from './sections/DesignSection';
 import { ContentSection } from './sections/ContentSection';
 import { defaultExpandedSections } from './constants/sidebarConstants';
 import FloatingSaveButton from './components/FloatingSaveButton';
+import { CustomUrlInput } from './components/CustomUrlInput';
 
 // Tab Information
 const TABS = [
@@ -39,18 +40,20 @@ function NavigationTabs({ activeTab, setActiveTab }) {
   );
 }
 
-// Settings Placeholder
-const SettingsTab = () => (
-  <div className="text-center py-8 space-y-2">
-    <div className="text-gray-400 mb-2">
-      <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
+// Updated Settings Tab with CustomUrlInput
+const SettingsTab = ({ selectedTemplate }: { selectedTemplate: string }) => (
+  <div className="space-y-4">
+    <div className="text-center py-4 space-y-2">
+      <h3 className="text-lg font-medium text-gray-700">Website Settings</h3>
+      <p className="text-gray-500 text-sm">Customize your website URL and other settings</p>
     </div>
-    <h3 className="text-lg font-medium text-gray-700">Settings</h3>
-    <p className="text-gray-500 text-sm">Coming Soon</p>
-    <p className="text-gray-400 text-xs">Additional settings options will be available here in future updates.</p>
+    
+    <CustomUrlInput selectedTemplate={selectedTemplate} />
+    
+    {/* Future settings can be added here */}
+    <div className="text-center py-4 space-y-2 border-t border-gray-200">
+      <p className="text-gray-400 text-xs">More settings options will be available here in future updates.</p>
+    </div>
   </div>
 );
 
@@ -81,6 +84,8 @@ interface ResizableTemplateSidebarProps {
   pendingChanges: Partial<WeddingData>;
   onWidthChange?: (width: number) => void;
   setPendingChanges: React.Dispatch<React.SetStateAction<Partial<WeddingData>>>;
+  previewTemplateId: string | null;
+  onSaveComplete?: () => void;
 }
 
 export default function ResizableTemplateSidebar({
@@ -92,7 +97,9 @@ export default function ResizableTemplateSidebar({
   onPendingChange,
   pendingChanges,
   onWidthChange,
-  setPendingChanges
+  setPendingChanges,
+  previewTemplateId,
+  onSaveComplete
 }: ResizableTemplateSidebarProps) {
   const { isResizing, sidebarWidth, sidebarRef, startResizing } = useResizableSidebar();
   const { formData, setFormData } = useSidebarForm(weddingData, selected, pendingChanges);
@@ -103,6 +110,7 @@ export default function ResizableTemplateSidebar({
   const [expandedSections, toggleSection] = useExpandedSections(defaultExpandedSections);
 
   // Sidebar content tabs
+  // Update the renderTab function
   const renderTab = () => {
     if (activeTab === 'design') return (
       <DesignSection
@@ -113,6 +121,7 @@ export default function ResizableTemplateSidebar({
         expandedSections={expandedSections}
         toggleSection={toggleSection}
         onFieldChange={onFieldChange}
+        onPendingChange={onPendingChange}
       />
     );
     if (activeTab === 'content') return (
@@ -129,7 +138,7 @@ export default function ResizableTemplateSidebar({
         onPendingChange={onPendingChange}
       />
     );
-    return <SettingsTab />;
+    return <SettingsTab selectedTemplate={selected} />;
   };
 
   return (
@@ -160,6 +169,8 @@ export default function ResizableTemplateSidebar({
       <FloatingSaveButton
         weddingData={weddingData}
         pendingChanges={pendingChanges}
+        previewTemplateId={previewTemplateId}
+        onSaveComplete={onSaveComplete}
         setPendingChanges={setPendingChanges}
       />
       {isResizing && <div className="fixed inset-0 cursor-col-resize z-50" />}

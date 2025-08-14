@@ -108,18 +108,14 @@ function DynamicUserWeddingPage() {
   const [searchParams] = useSearchParams();
   const [iframeUrl, setIframeUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState("template_1");
   const [templateUrl, setTemplateUrl] = useState("https://template-7.matson.app");
   const { open, setOpen } = useSidebar();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [sidebarWidth, setSidebarWidth] = useState(320);
 
-  // Responsive / desktop state hook
-  const isDesktop = useResponsiveSidebar(setOpen);
-
-  // Click outside hook for mobile sidebar close
-  useCloseSidebarOnClickOutside(open, setOpen);
+  // Add preview template state
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
 
   // Track pending changes without causing rerenders on wedding data
   const [pendingChanges, setPendingChanges] = useState<Partial<WeddingData>>({});
@@ -128,34 +124,42 @@ function DynamicUserWeddingPage() {
     weddingDataRef.current = weddingData;
   }, [weddingData]);
 
-  // Fetch template URL when selectedTemplate changes
+  // Use preview OR saved template_id (remove hardcoded default)
+  const templateToShow = previewTemplateId || weddingData?.template_id;
+
+  // Responsive / desktop state hook
+  const isDesktop = useResponsiveSidebar(setOpen);
+
+  // Click outside hook for mobile sidebar close
+  useCloseSidebarOnClickOutside(open, setOpen);
+
+  // Fetch template URL when templateToShow changes
   useEffect(() => {
     const fetchTemplateUrl = async () => {
-      if (selectedTemplate.startsWith('template_')) {
-        const templateId = selectedTemplate.replace('template_', '');
-        try {
-          const { data, error } = await supabase
-            .from('wedding_template')
-            .select('template_url')
-            .eq('id', parseInt(templateId))
-            .single();
+      if (!templateToShow) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('wedding_template')
+          .select('template_url')
+          .eq('template_id', templateToShow)
+          .single();
 
-          if (error) {
-            console.error('Error fetching template URL:', error);
-            return;
-          }
-
-          if (data?.template_url) {
-            setTemplateUrl(data.template_url);
-          }
-        } catch (error) {
+        if (error) {
           console.error('Error fetching template URL:', error);
+          return;
         }
+
+        if (data?.template_url) {
+          setTemplateUrl(data.template_url);
+        }
+      } catch (error) {
+        console.error('Error fetching template URL:', error);
       }
     };
 
     fetchTemplateUrl();
-  }, [selectedTemplate]);
+  }, [templateToShow]);
 
   // Compose iframe login URL once per session or searchParam updates
   useEffect(() => {
@@ -240,6 +244,11 @@ function DynamicUserWeddingPage() {
   const handlePendingChange = useCallback(
     (section: keyof WeddingData, field: string, value: string) => {
       setPendingChanges((prev) => {
+        // Handle top-level properties like template_id
+        if (section === 'template_id' || field === '') {
+          return { ...prev, [section]: value };
+        }
+        
         if (field === "array_update") {
           try {
             const newArray = JSON.parse(value);
@@ -267,14 +276,16 @@ function DynamicUserWeddingPage() {
   );
 
   const handleTemplateChange = useCallback((id: string) => {
-    setSelectedTemplate(id);
+    // Instead of saving immediately, just update pending changes
+    setPendingChanges(prev => ({ ...prev, template_id: id }));
   }, []);
 
-  // Send wedding data updates to iframe
+  // Send wedding data updates to iframe, including pending template changes
   useEffect(() => {
     if (iframeRef.current && weddingData) {
       const sanitizedWeddingData = {
         ...weddingData,
+        ...pendingChanges, // Include pending changes
         schedule: transformScheduleToArray(weddingData.schedule),
         gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : [],
       };
@@ -286,7 +297,7 @@ function DynamicUserWeddingPage() {
         "*"
       );
     }
-  }, [weddingData]);
+  }, [weddingData, pendingChanges]); // Add pendingChanges as dependency
 
   const toggleSidebar = useCallback(() => setOpen((o) => !o), [setOpen]);
 
@@ -326,8 +337,8 @@ function DynamicUserWeddingPage() {
           style={sidebarStyles}
         >
           <ResizableTemplateSidebar
-            selected={selectedTemplate}
-            setSelected={handleTemplateChange}
+            selected={templateToShow}
+            setSelected={(tid) => setPreviewTemplateId(tid)}
             weddingData={weddingData}
             onClose={() => setOpen(false)}
             onFieldChange={handleFieldChange}
@@ -335,6 +346,8 @@ function DynamicUserWeddingPage() {
             pendingChanges={pendingChanges}
             onWidthChange={setSidebarWidth}
             setPendingChanges={setPendingChanges}
+            previewTemplateId={previewTemplateId}
+            onSaveComplete={() => setPreviewTemplateId(null)}
           />
         </div>
       )}
@@ -371,7 +384,7 @@ function DynamicUserWeddingPage() {
             <iframe
               ref={iframeRef}
               src={`${iframeUrl}${iframeUrl.includes("?") ? "&" : "?"}template=${encodeURIComponent(
-                selectedTemplate
+                templateToShow
               )}`}
               className="w-full h-full border-0"
               title="Wedding Website Preview"
@@ -382,6 +395,7 @@ function DynamicUserWeddingPage() {
                 const sanitizedWeddingData = weddingData
                   ? {
                       ...weddingData,
+                      ...pendingChanges, // Include pending changes in onLoad message
                       schedule: transformScheduleToArray(weddingData.schedule),
                       gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : [],
                     }
@@ -389,7 +403,7 @@ function DynamicUserWeddingPage() {
                 iframeRef.current?.contentWindow?.postMessage(
                   {
                     type: "TEMPLATE_CHANGED",
-                    template: selectedTemplate,
+                    template: templateToShow,
                     weddingData: sanitizedWeddingData,
                   },
                   "*"

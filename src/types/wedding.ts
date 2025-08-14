@@ -94,6 +94,7 @@ export interface WeddingData {
   jeweller: WeddingJeweller;
   colorScheme?: string;
   fontFamily?: string;
+  template_id?: string; // Add this line
 }
 
 export interface WeddingWish {
