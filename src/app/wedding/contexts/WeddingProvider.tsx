@@ -253,7 +253,11 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
     
           if (!data?.web_data) {
             console.log("No data found for user:", userId);
-            // Don't set any default data, just return
+            // Create initial wedding data for new users
+            const success = await saveData(defaultWeddingData);
+            if (success) {
+              setWeddingData(defaultWeddingData);
+            }
             return;
           }
     
