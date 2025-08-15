@@ -173,10 +173,8 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
     };
 
     const saveData = useCallback(
-      async (data: WeddingData, overrideUserId?: string): Promise<boolean> => {
-        const targetUserId = overrideUserId || user?.id;
-
-        if (!targetUserId) {
+      async (data: WeddingData): Promise<boolean> => {
+        if (!user?.id) {
           console.error("No user logged in");
           return false;
         }
@@ -185,12 +183,12 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
           const sanitizedData = {
             ...data,
             schedule: transformScheduleToArray(data.schedule),
-            gallery: Array.isArray(data.gallery) ? data.gallery : [],
+            gallery: Array.isArray(data.gallery) ? data.gallery : []
           };
           
           const { error } = await supabase.from("web_entries").upsert(
             {
-              user_id: targetUserId,
+              user_id: user.id,
               web_data: sanitizedData as unknown as Json,
               updated_at: new Date().toISOString(),
             },
@@ -200,19 +198,23 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
             console.error("Error saving wedding data:", error);
             return false;
           }
-          // Optionally update template_id in user_profile
+
+          // If template_id is provided, update user_profile table
           if (data.template_id) {
             const { error: profileError } = await supabase
               .from("user_profile")
-              .update({
+              .update({ 
                 template_id: data.template_id,
-                updated_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               })
-              .eq("user_id", targetUserId);
+              .eq("user_id", user.id);
+            
             if (profileError) {
               console.error("Error updating user profile template:", profileError);
+              // Don't return false here as the main data was saved successfully
             }
           }
+
           return true;
         } catch (error) {
           console.error("Error saving wedding data:", error);
@@ -222,31 +224,6 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
       [user]
     );
   
-    /** Load all wedding wishes - for admin or general show */
-    const loadAllWeddingWishes = useCallback(async (): Promise<void> => {
-      if (!user?.id) {
-        console.log("No user ID available for loading wishes");
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("guest_wishes")
-          .select("*")
-          .eq("variant", user.id)
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error loading all wishes:", error);
-          return;
-        }
-
-        setWeddingWishes(data || []);
-      } catch (error) {
-        console.error("Error loading all wishes:", error);
-      }
-    }, [user?.id]);
-  
     /** Load wedding data by user id */
     const loadWeddingData = useCallback(
       async (userId: string): Promise<void> => {
@@ -254,14 +231,14 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
           console.log("No valid user ID provided, skipping data load. Id is:", userId);
           return;
         }
-
+  
         try {
           const { data, error } = await supabase
             .from("web_entries")
             .select("web_data")
             .eq("user_id", userId)
             .maybeSingle();
-
+  
           if (error) {
             console.error("Error loading wedding data:", error);
             return;
@@ -273,56 +250,81 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
             .select("template_id")
             .eq("user_id", userId)
             .single();
-
+    
           if (!data?.web_data) {
             console.log("No data found for user:", userId);
             // Create initial wedding data for new users
-
-            // Create new sanitized defaultWeddingData with template_id from profile if available
-            const defaultData = {
-              ...defaultWeddingData,
-              template_id: profileData?.template_id || undefined,
-            };
-
-            // Save using userId, even if context user is not set
-            const { error: upsertError } = await supabase.from("web_entries").upsert(
-              {
-                user_id: userId,
-                web_data: defaultData as unknown as Json,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "user_id" }
-            );
-
-            if (upsertError) {
-              console.error("Error initializing wedding data for new user:", upsertError);
-              return;
+            const success = await saveData(defaultWeddingData);
+            if (success) {
+              setWeddingData(defaultWeddingData);
             }
-
-            setWeddingData(defaultData);
             return;
           }
-
+    
           // Sanitize loaded data to ensure schedule and gallery are always arrays
           let loadedData = data.web_data as WeddingData;
           loadedData = {
             ...loadedData,
             schedule: transformScheduleToArray(loadedData.schedule),
             gallery: Array.isArray(loadedData.gallery) ? loadedData.gallery : [],
-            template_id: profileData?.template_id || loadedData.template_id,
+            // Add template_id from user_profile if available
+            template_id: profileData?.template_id || loadedData.template_id
           };
-          setWeddingData(loadedData);
-
-          // Load wishes if on wishes page
+          
+          setWeddingData(loadedData); // Fixed: use loadedData instead of sanitizedData
+    
+          // If on wishes path, load wishes for this user variant
           if (location.pathname === "/wishes") {
-            await loadAllWeddingWishes();
+            try {
+              const { data: wishes, error: wishError } = await supabase
+                .from("guest_wishes")
+                .select("id, name, message")
+                .eq("variant", userId)
+                .order("created_at", { ascending: false })
+                .limit(3);
+  
+              if (wishError) {
+                console.error("Error loading wish data: ", wishError);
+              } else {
+                setWeddingWishes(wishes || []);
+              }
+            } catch (err) {
+              console.error("Error loading wish data:", err);
+            }
           }
         } catch (error) {
           console.error("Error loading wedding data:", error);
-        }
+        } 
       },
-      [location.pathname, loadAllWeddingWishes]
+      [location.pathname]
     );
+  
+    /** Load all wedding wishes - for admin or general show */
+    const loadAllWeddingWishes = useCallback(async (): Promise<void> => {
+      try {
+        // Use user ID if available, otherwise skip loading
+        if (!user?.id) {
+          console.log("No user ID available, skipping wish loading");
+          setWeddingWishes([]);
+          return;
+        }
+  
+        const { data, error } = await supabase
+          .from("guest_wishes")
+          .select("id, name, message")
+          .eq("variant", user.id)
+          .order("created_at", { ascending: false });
+  
+        if (error) {
+          console.error("Error loading all wishes (Supabase error):", error);
+          return;
+        }
+  
+        setWeddingWishes(data || []);
+      } catch (error) {
+        console.error("Error loading all wishes:", error);
+      }
+    }, [user?.id]);
   
     /** Update wedding data partially and save */
     const updateWeddingData = useCallback(
