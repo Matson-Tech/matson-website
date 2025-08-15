@@ -53,12 +53,12 @@ export default function FloatingSaveButton({
     }
   }, [weddingData, pendingChanges, previewTemplateId, updateWeddingData, toast, setPendingChanges, onSaveComplete]);
 
-  if (!shouldShowButton && !isSaving) return null;
+  // if (!shouldShowButton && !isSaving) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-50">
+    <div className="sticky bottom-4 left-0 w-full flex justify-center z-50 bg-transparent">
       <button
-        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
+        className="px-4 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
         onClick={handleSaveTemplate}
         disabled={isSaving}
       >

@@ -206,13 +206,13 @@ const Navbar = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/login')}
-                  className="text-foreground hover:text-primary"
+                  className="text-foreground hover:text-primary hover:bg-transparent"
                 >
                   <LogIn className="mr-2 h-4 w-4" />
                   Sign In
                 </Button>
               )}
-              {isLoggedIn ? (
+              {isLoggedIn && (
                 <Button 
                   size="sm" 
                   variant="default"
@@ -222,15 +222,6 @@ const Navbar = () => {
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {user?.bride_name && user?.groom_name ? 'My Website' : 'Create Website'}
-                </Button>
-              ) : (
-                <Button 
-                  size="sm" 
-                  variant="default"
-                  onClick={() => navigate('/login')}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  Get Started
                 </Button>
               )}
             </div>
