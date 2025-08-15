@@ -297,12 +297,18 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
   
     /** Load all wedding wishes - for admin or general show */
     const loadAllWeddingWishes = useCallback(async (): Promise<void> => {
-  
       try {
+        // Use user ID if available, otherwise skip loading
+        if (!user?.id) {
+          console.log("No user ID available, skipping wish loading");
+          setWeddingWishes([]);
+          return;
+        }
+  
         const { data, error } = await supabase
           .from("guest_wishes")
           .select("id, name, message")
-          .eq("variant", import.meta.env.VITE_WEBSITE_KEY || "")
+          .eq("variant", user.id)
           .order("created_at", { ascending: false });
   
         if (error) {
@@ -314,7 +320,7 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
       } catch (error) {
         console.error("Error loading all wishes:", error);
       }
-    }, []);
+    }, [user?.id]);
   
     /** Update wedding data partially and save */
     const updateWeddingData = useCallback(
