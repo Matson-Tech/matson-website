@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import type { WeddingData, ScheduleItem } from "@/types/wedding";
 import { useToast } from "@/components/ui/use-toast";
+import { WEDDING_WEBSITES } from "@/app/public/constants/websites";
 
 interface SidebarContextType {
   open: boolean;
@@ -120,6 +121,10 @@ function DynamicUserWeddingPage() {
   // Track pending changes without causing rerenders on wedding data
   const [pendingChanges, setPendingChanges] = useState<Partial<WeddingData>>({});
   const weddingDataRef = useRef(weddingData);
+  
+  // Add state for template coming soon status (remove the duplicate declaration)
+  const [isComingSoon, setIsComingSoon] = useState(false);
+
   useEffect(() => {
     weddingDataRef.current = weddingData;
   }, [weddingData]);
@@ -138,6 +143,19 @@ function DynamicUserWeddingPage() {
     const fetchTemplateUrl = async () => {
       if (!templateToShow) return;
       
+      // Check if this is a "coming soon" template from websites.ts
+      const websiteTemplate = WEDDING_WEBSITES.find(
+        (website, index) => `website-${index}` === templateToShow
+      );
+      
+      if (websiteTemplate) {
+        // For coming soon templates, use the URL directly from websites.ts
+        setTemplateUrl(websiteTemplate.url);
+        setIsComingSoon(websiteTemplate.comingSoon || false);
+        return;
+      }
+      
+      // For regular templates, fetch from Supabase
       try {
         const { data, error } = await supabase
           .from('wedding_template')
@@ -152,6 +170,12 @@ function DynamicUserWeddingPage() {
 
         if (data?.template_url) {
           setTemplateUrl(data.template_url);
+          
+          // Check if this template URL is in the coming soon list from websites.ts
+          const isTemplateComingSoon = WEDDING_WEBSITES.some(
+            website => website.url === data.template_url && website.comingSoon
+          );
+          setIsComingSoon(isTemplateComingSoon);
         }
       } catch (error) {
         console.error('Error fetching template URL:', error);
@@ -165,12 +189,23 @@ function DynamicUserWeddingPage() {
   useEffect(() => {
     const accessToken = searchParams.get("access_token") ?? session?.access_token ?? "";
     const refreshToken = searchParams.get("refresh_token") ?? session?.refresh_token ?? "";
-    const url = new URL(`${templateUrl}/login`);
-    accessToken && url.searchParams.append("access_token", accessToken);
-    refreshToken && url.searchParams.append("refresh_token", refreshToken);
-    setIframeUrl(url.toString());
+    
+    // For coming soon templates, use the URL directly without /login route
+    if (isComingSoon) {
+      const url = new URL(templateUrl);
+      accessToken && url.searchParams.append("access_token", accessToken);
+      refreshToken && url.searchParams.append("refresh_token", refreshToken);
+      setIframeUrl(url.toString());
+    } else {
+      // For regular templates, use the /login route
+      const url = new URL(`${templateUrl}/login`);
+      accessToken && url.searchParams.append("access_token", accessToken);
+      refreshToken && url.searchParams.append("refresh_token", refreshToken);
+      setIframeUrl(url.toString());
+    }
+    
     setIsLoading(false);
-  }, [searchParams, session, templateUrl]);
+  }, [searchParams, session, templateUrl, isComingSoon]);
 
   const { updateWeddingData } = useWedding();
   const { toast } = useToast();
@@ -380,7 +415,8 @@ function DynamicUserWeddingPage() {
         </header>
 
         <div className="flex-1 bg-gray-100 p-4 overflow-auto">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full relative">
+            {/* Always render iframe, whether it's coming soon or not */}
             <iframe
               ref={iframeRef}
               src={`${iframeUrl}${iframeUrl.includes("?") ? "&" : "?"}template=${encodeURIComponent(
@@ -395,7 +431,7 @@ function DynamicUserWeddingPage() {
                 const sanitizedWeddingData = weddingData
                   ? {
                       ...weddingData,
-                      ...pendingChanges, // Include pending changes in onLoad message
+                      ...pendingChanges,
                       schedule: transformScheduleToArray(weddingData.schedule),
                       gallery: Array.isArray(weddingData.gallery) ? weddingData.gallery : [],
                     }
@@ -411,6 +447,12 @@ function DynamicUserWeddingPage() {
                 setIsLoading(false);
               }}
             />
+            {/* Add a floating badge for coming soon templates */}
+            {isComingSoon && (
+              <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg z-10">
+                🚧 Coming Soon Template
+              </div>
+            )}
           </div>
         </div>
       </div>
