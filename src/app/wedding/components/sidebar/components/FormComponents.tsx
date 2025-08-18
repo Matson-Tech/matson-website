@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Upload, Loader2, X } from 'lucide-react';
-import { uploadGalleryImage } from '@/utils/UploadGalleryImage';
 import useWedding from '@/hooks/useWedding';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -14,6 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { uploadImage} from '@/utils/UploadImage';
+import  uploadHeroOrStoryImage  from '@/utils/UploadImage';
 
 // Helper component for text inputs
 export const TextInput = ({ label, value, onChange, onKeyDown, placeholder, type = "text" }: {
@@ -90,14 +91,17 @@ export const ToggleSwitch = ({ label, checked, onChange }: {
 );
 
 // Helper component for image upload
-export const ImageUpload = ({ label, value, onChange }: {
+// Update the ImageUpload component
+export const ImageUpload = ({ label, value, onChange, galleryIndex, imageType }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  galleryIndex?: number;
+  imageType?: 'hero_image' | 'story_image'; // Add this prop
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const { user } = useWedding();
+  const { user, updateGalleryImage } = useWedding();
 
   const handleFileUpload = async (file: File) => {
     if (!user) {
@@ -111,23 +115,46 @@ export const ImageUpload = ({ label, value, onChange }: {
 
     setIsUploading(true);
     try {
-      const uniqueName = `form_${Date.now()}_${crypto.randomUUID()}`;
-      const imageUrl = await uploadGalleryImage(file, user, uniqueName);
-      
-      if (imageUrl) {
-        // Only update the form field, don't modify gallery array
-        onChange(imageUrl);
+      if (typeof galleryIndex === 'number') {
+        // If galleryIndex is provided, update the gallery array in web_data
+        await updateGalleryImage(file, null, galleryIndex);
         
+        console.log("Updated galleryIndex data:", galleryIndex);
         toast({
-          title: "Image uploaded successfully!",
-          description: "The image URL has been updated.",
+          title: "Gallery image updated successfully!",
+          description: "The image has been added to your gallery.",
         });
+      } else if (imageType) {
+        // For hero and story images, use the specialized upload function
+        const imageUrl = await uploadHeroOrStoryImage(file, user, imageType);
+        
+        if (imageUrl) {
+          onChange(imageUrl);
+          
+          toast({
+            title: "Image uploaded successfully!",
+            description: `The ${imageType.replace('_', ' ')} has been updated.`,
+          });
+        }
+      } else {
+        // For other form fields (non-gallery images), use the direct upload
+        const uniqueName = `form_${Date.now()}_${crypto.randomUUID()}`;
+        const imageUrl = await uploadImage(file, user, uniqueName);
+
+        if (imageUrl) {
+          onChange(imageUrl);
+          
+          toast({
+            title: "Image uploaded successfully!",
+            description: "The image URL has been updated.",
+          });
+        }
       }
     } catch (error) {
       console.error('Upload failed:', error);
       toast({
         title: "Upload failed",
-        description: "Failed to upload image to gallery",
+        description: "Failed to upload image",
         variant: "destructive",
       });
     } finally {
@@ -158,7 +185,7 @@ export const ImageUpload = ({ label, value, onChange }: {
                 className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50"
               >
                 <X className="w-3 h-3" />
-                Remove Image
+                Remove ImageimageUrl
               </button>
             </div>
           ) : (

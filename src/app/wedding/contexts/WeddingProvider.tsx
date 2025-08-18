@@ -14,8 +14,8 @@ import type { Json } from "@/app/wedding/types/custom-types";
 import { WeddingContext } from "./WeddingContext";
 import type { AuthUser, WeddingData, WeddingWish, ScheduleItem } from "@/types/wedding";
 import uploadImage from "@/utils/UploadImage";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useToast } from "@/hooks/use-toast";
+// Remove this line: import "react-toastify/dist/ReactToastify.css";
 
 /* -------------------- Default Wedding Data -------------------- */
 const defaultWeddingData: WeddingData = {
@@ -163,265 +163,267 @@ interface ProviderProps {
 }
 
 export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
-    // State declarations with explicit types
-    const [weddingData, setWeddingData] = useState<WeddingData>(defaultWeddingData);
-    const [weddingWishes, setWeddingWishes] = useState<WeddingWish[]>([]);
-    const [user, setUser] = useState<AuthUser | null>(null);
-    const [session, setSession] = useState<Session | null>(null);
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-    const [isAuthInitialized, setIsAuthInitialized] = useState<boolean>(false);
-    const [globalIsLoading, setGlobalIsLoading] = useState<boolean>(true);
-  
-    const location = useLocation();
-    const navigate = useNavigate();
-  
-    /** Helper: Save data to Supabase */
-    // Helper function to transform schedule object to array
-    const transformScheduleToArray = (schedule: any): ScheduleItem[] => {
-      if (Array.isArray(schedule)) {
-        return schedule;
-      }
-      
-      if (schedule && typeof schedule === 'object') {
-        // Convert object with numeric keys to array
-        const scheduleArray: ScheduleItem[] = [];
-        
-        // Extract items with numeric keys
-        Object.keys(schedule).forEach(key => {
-          const numKey = parseInt(key);
-          if (!isNaN(numKey) && schedule[key] && typeof schedule[key] === 'object') {
-            const item = schedule[key];
-            if (item.id && item.time && item.event) {
-              scheduleArray.push({
-                id: item.id,
-                time: item.time,
-                event: item.event,
-                description: item.description || ''
-              });
-            }
-          }
-        });
-        
-        return scheduleArray;
-      }
-      
-      return [];
-    };
+  const { toast } = useToast();
+  const [weddingData, setWeddingData] = useState<WeddingData>(defaultWeddingData);
+  const [weddingWishes, setWeddingWishes] = useState<WeddingWish[]>([]);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+  const [globalLoading, setGlobalLoading] = useState(true);
 
-    const saveData = useCallback(
-      async (data: WeddingData): Promise<boolean> => {
-        if (!user?.id) {
-          console.error("No user logged in");
+
+  const loadInProgress = useRef(false);
+  const currentLoadedUserId = useRef<string | null>(null);
+  const wishesLoaded = useRef(false);
+
+  const authListenerRef = useRef<any>(null);
+  const location = useLocation();
+  const navigate = useNavigate(); // Move this to component level
+
+  /* -------- Save wedding data -------- */
+  const saveData = useCallback(
+    async (data: WeddingData, overrideUserId?: string): Promise<boolean> => {
+      const targetUserId = overrideUserId || user?.id;
+      if (!targetUserId) {
+        console.error("No user logged in");
+        return false;
+      }
+      try {
+        const sanitizedData = sanitizeWeddingData(data);
+        const { error } = await supabase.from("web_entries").upsert(
+          {
+            user_id: targetUserId,
+            web_data: sanitizedData as unknown as Json, // Fix: Cast to unknown first, then to Json
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+        if (error) {
+          console.error("Error saving wedding data:", error);
           return false;
         }
-        try {
-          // Sanitize data before saving to ensure schedule is always an array
-          const sanitizedData = {
-            ...data,
-            schedule: transformScheduleToArray(data.schedule),
-            gallery: Array.isArray(data.gallery) ? data.gallery : []
+        if (data.template_id) {
+          const { error: profileError } = await supabase
+            .from("user_profile")
+            .update({ template_id: data.template_id, updated_at: new Date().toISOString() })
+            .eq("user_id", targetUserId);
+          if (profileError) {
+            console.error("Error updating user profile template:", profileError);
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error("Error saving wedding data:", error);
+        return false;
+      }
+    },
+    [user]
+  );
+
+  const loadAllWishes = useCallback(async (): Promise<void> => {
+    if (!user?.id) return;
+    if (wishesLoaded.current && currentLoadedUserId.current === user.id) return;
+    try {
+      const { data, error } = await supabase
+        .from("guest_wishes")
+        .select("*")
+        .eq("variant", user.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("[loadAllWishes] Error loading wishes:", error);
+        return;
+      }
+      setWeddingWishes(data || []);
+      wishesLoaded.current = true;
+    } catch (error) {
+      console.error("[loadAllWishes] Error loading wishes:", error);
+    }
+  }, [user?.id]);
+
+  /* -------- Rewrite of loadWeddingData with enhanced safety -------- */
+  const loadWeddingData = useCallback(
+    async (userId: string): Promise<void> => {
+      if (!userId || userId === "default") return;
+
+      if (loadInProgress.current && currentLoadedUserId.current === userId) {
+        return;
+      }
+
+      // Save previous loading flag to reset in case of error
+      const wasLoading = loadInProgress.current;
+
+      // Mark loading state immediately to prevent re-entry
+      loadInProgress.current = true;
+      currentLoadedUserId.current = userId;
+
+      try {
+        const { data, error } = await supabase
+          .from("web_entries")
+          .select("web_data")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (error) {
+          console.error("[loadWeddingData] Error loading data:", error);
+          loadInProgress.current = wasLoading;
+          currentLoadedUserId.current = null;
+          return;
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("user_profile")
+          .select("template_id")
+          .eq("user_id", userId)
+          .single();
+
+        if (profileError) {
+          console.warn("[loadWeddingData] Could not fetch profile", profileError.message);
+        }
+
+        if (!data?.web_data) {
+          const defaultData = {
+            ...defaultWeddingData,
+            template_id: profileData?.template_id,
           };
-          
-          const { error } = await supabase.from("web_entries").upsert(
+
+          const { error: upsertError } = await supabase.from("web_entries").upsert(
             {
-              user_id: user.id,
-              web_data: sanitizedData as unknown as Json,
+              user_id: userId,
+              web_data: defaultData as unknown as Json, // Fix: Cast to unknown first, then to Json
               updated_at: new Date().toISOString(),
             },
             { onConflict: "user_id" }
           );
-          if (error) {
-            console.error("Error saving wedding data:", error);
-            return false;
+
+          if (upsertError) {
+            console.error("[loadWeddingData] Error creating initial data:", upsertError);
+            loadInProgress.current = wasLoading;
+            currentLoadedUserId.current = null;
+            return;
           }
 
-          // If template_id is provided, update user_profile table
-          if (data.template_id) {
-            const { error: profileError } = await supabase
-              .from("user_profile")
-              .update({ 
-                template_id: data.template_id,
-                updated_at: new Date().toISOString()
-              })
-              .eq("user_id", user.id);
-            
-            if (profileError) {
-              console.error("Error updating user profile template:", profileError);
-              // Don't return false here as the main data was saved successfully
-            }
-          }
+          setWeddingData(defaultData);
+          loadInProgress.current = true;
+          currentLoadedUserId.current = userId;
+          return;
+        }
 
-          return true;
-        } catch (error) {
-          console.error("Error saving wedding data:", error);
+        let loadedData = data.web_data as WeddingData;
+        loadedData = {
+          ...loadedData,
+          schedule: transformScheduleToArray(loadedData.schedule),
+          gallery: Array.isArray(loadedData.gallery) ? loadedData.gallery : [],
+          template_id: profileData?.template_id || loadedData.template_id,
+        };
+
+        setWeddingData(loadedData);
+        loadInProgress.current = true;
+        currentLoadedUserId.current = userId;
+
+        if (location.pathname === "/wishes" && !wishesLoaded.current) {
+          await loadAllWishes();
+        }
+      } catch (e) {
+        console.error("[loadWeddingData] Unexpected error:", e);
+        loadInProgress.current = wasLoading;
+        currentLoadedUserId.current = null;
+      }
+    },
+    [location.pathname, loadAllWishes]
+  );
+
+  /* -------- Update wedding data partially -------- */
+  const updateWeddingData = useCallback(
+    async (data: Partial<WeddingData>): Promise<boolean> => {
+      let previousData;
+      try {
+        previousData = cloneData(weddingData);
+      } catch {
+        previousData = weddingData;
+      }
+      const updated = { ...weddingData, ...data };
+      setWeddingData(updated);
+
+      const success = await saveData(updated);
+      if (!success) {
+        setWeddingData(previousData);
+      }
+      return success;
+    },
+    [weddingData, saveData]
+  );
+
+  /* -------- Update a gallery image -------- */
+  const updateGalleryImage = useCallback(
+    async (file: File | null, imageCaption: string | null, index: number): Promise<void> => {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to upload images",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const imageId = `${Date.now()}-${crypto.randomUUID()}`;
+      const imageName = `gallery_image_${imageId}`;
+
+      const updatedGallery = [...weddingData.gallery];
+      if (index >= updatedGallery.length) {
+        updatedGallery.push({
+          id: imageId,
+          url: "",
+          caption: imageCaption,
+          name: imageName,
+        });
+      }
+
+      if (file) {
+        const imageUrl = await uploadImage(file, user, imageName);
+        if (!imageUrl) {
+          toast({
+            title: "Error",
+            description: "Image upload failed",
+            variant: "destructive",
+          });
+          return;
+        }
+        updatedGallery[index].url = imageUrl;
+      }
+
+      updatedGallery[index].caption = imageCaption;
+      
+      // Add error handling for database save
+      const success = await updateWeddingData({ gallery: updatedGallery });
+      if (!success) {
+        toast({
+          title: "Error",
+          description: "Failed to save image data to database",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Gallery image updated successfully",
+      });
+    },
+    [updateWeddingData, user, weddingData.gallery, toast]
+  );
+
+  /* -------- Add a guest wish -------- */
+  const addWish = useCallback(
+    async (wish: Omit<WeddingWish, "id">): Promise<boolean> => {
+      try {
+        if (!user?.id) {
+          toast({
+            title: "Error",
+            description: "You must be logged in to add a wish.",
+            variant: "destructive",
+          });
           return false;
         }
-      },
-      [user]
-    );
-  
-    /** Load wedding data by user id */
-    const loadWeddingData = useCallback(
-      async (userId: string): Promise<void> => {
-        if (!userId || userId === "default") {
-          console.log("No valid user ID provided, skipping data load. Id is:", userId);
-          return;
-        }
-  
-        try {
-          const { data, error } = await supabase
-            .from("web_entries")
-            .select("web_data")
-            .eq("user_id", userId)
-            .maybeSingle();
-  
-          if (error) {
-            console.error("Error loading wedding data:", error);
-            return;
-          }
-
-          // Load template_id from user_profile
-          const { data: profileData, error: profileError } = await supabase
-            .from("user_profile")
-            .select("template_id")
-            .eq("user_id", userId)
-            .single();
-    
-          if (!data?.web_data) {
-            console.log("No data found for user:", userId);
-            // Create initial wedding data for new users
-            const success = await saveData(defaultWeddingData);
-            if (success) {
-              setWeddingData(defaultWeddingData);
-            }
-            return;
-          }
-    
-          // Sanitize loaded data to ensure schedule and gallery are always arrays
-          let loadedData = data.web_data as WeddingData;
-          loadedData = {
-            ...loadedData,
-            schedule: transformScheduleToArray(loadedData.schedule),
-            gallery: Array.isArray(loadedData.gallery) ? loadedData.gallery : [],
-            // Add template_id from user_profile if available
-            template_id: profileData?.template_id || loadedData.template_id
-          };
-          
-          setWeddingData(loadedData); // Fixed: use loadedData instead of sanitizedData
-    
-          // If on wishes path, load wishes for this user variant
-          if (location.pathname === "/wishes") {
-            try {
-              const { data: wishes, error: wishError } = await supabase
-                .from("guest_wishes")
-                .select("id, name, message")
-                .eq("variant", userId)
-                .order("created_at", { ascending: false })
-                .limit(3);
-  
-              if (wishError) {
-                console.error("Error loading wish data: ", wishError);
-              } else {
-                setWeddingWishes(wishes || []);
-              }
-            } catch (err) {
-              console.error("Error loading wish data:", err);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading wedding data:", error);
-        } 
-      },
-      [location.pathname]
-    );
-  
-    /** Load all wedding wishes - for admin or general show */
-    const loadAllWeddingWishes = useCallback(async (): Promise<void> => {
-      try {
-        // Use user ID if available, otherwise skip loading
-        if (!user?.id) {
-          console.log("No user ID available, skipping wish loading");
-          setWeddingWishes([]);
-          return;
-        }
-  
-        const { data, error } = await supabase
-          .from("guest_wishes")
-          .select("id, name, message")
-          .eq("variant", user.id)
-          .order("created_at", { ascending: false });
-  
-        if (error) {
-          console.error("Error loading all wishes (Supabase error):", error);
-          return;
-        }
-  
-        setWeddingWishes(data || []);
-      } catch (error) {
-        console.error("Error loading all wishes:", error);
-      }
-    }, [user?.id]);
-  
-    /** Update wedding data partially and save */
-    const updateWeddingData = useCallback(
-      async (data: Partial<WeddingData>): Promise<boolean> => {
-        const previousData = structuredClone(weddingData);
-        const updated = { ...weddingData, ...data };
-        setWeddingData(updated);
-  
-        const success = await saveData(updated);
-        if (!success) {
-          // revert on failure
-          setWeddingData(previousData);
-        }
-        return success;
-      },
-      [weddingData, saveData]
-    );
-  
-    /** Update a gallery image by index with a file upload */
-    const updateGalleryImage = useCallback(
-      async (file: File | null, imageCaption: string | null, index: number): Promise<void> => {
-        const imageId = `${Date.now()}-${crypto.randomUUID()}`;
-        const imageName = `gallery_image_${imageId}`;
-  
-        const updatedGallery = [...weddingData.gallery];
-  
-        // Add new image if index is out of range
-        if (index >= updatedGallery.length) {
-          updatedGallery.push({
-            id: imageId,
-            url: "",
-            caption: imageCaption,
-            name: imageName,
-          });
-        }
-  
-        if (file) {
-          const imageUrl = await uploadImage(file, user, imageName);
-          if (!imageUrl) {
-            toast.error("Image upload failed");
-            return;
-          }
-          updatedGallery[index].url = imageUrl;
-        }
-  
-        updatedGallery[index].caption = imageCaption;
-  
-        await updateWeddingData({ gallery: updatedGallery });
-      },
-      [updateWeddingData, user, weddingData.gallery]
-    );
-  
-    /** Add a guest wish */
-    const addWish = useCallback(
-      async (wish: Omit<WeddingWish, "id">): Promise<boolean> => {
-        try {
-          if (!user?.id) {
-            console.error("Cannot add wish: No authenticated user");
-            toast.error("You must be logged in to add a wish.");
-            return false;
-          }
 
         // Fix variant to user.id to align with load filter
         const { error } = await supabase.from("guest_wishes").insert({
@@ -432,18 +434,26 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
         });
 
         if (error) {
-          toast.error("Failed to add your wish. Please try again.");
+          toast({
+            title: "Error",
+            description: "Failed to add your wish. Please try again.",
+            variant: "destructive",
+          });
           return false;
         }
 
         await loadAllWishes();
         return true;
       } catch {
-        toast.error("Failed to add your wish. Please try again.");
+        toast({
+          title: "Error",
+          description: "Failed to add your wish. Please try again.",
+          variant: "destructive",
+        });
         return false;
       }
     },
-    [user?.id, loadAllWishes]
+    [user?.id, loadAllWishes, toast]
   );
 
   /* -------- Handle auth state changes -------- */
@@ -659,41 +669,61 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
   );
 
   /* -------- Logout -------- */
-  /** Logout function */
   const logout = useCallback(async () => {
     try {
-      // Sign out from Supabase with scope 'local' to clear all storage
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      // Reset refs first to prevent race conditions
+      loadInProgress.current = false;
+      wishesLoaded.current = false;
+      currentLoadedUserId.current = null;
+      
+      // Sign out from Supabase (this will trigger handleAuthStateChange)
+      const { error } = await supabase.auth.signOut({ scope: "local" });
       if (error) {
         console.error("Supabase signOut error:", error);
-        // Continue with cleanup even if signOut fails
+        // If signOut fails, manually clean up
+        clearAuthLocalStorage();
+        sessionStorage.removeItem("wedding_session");
+        
+        flushSync(() => {
+          setUser(null);
+          setIsLoggedIn(false);
+          setWeddingData(defaultWeddingData);
+          setWeddingWishes([]);
+          setSession(null);
+          setIsAuthInitialized(true);
+          setGlobalLoading(false);
+        });
       }
-  
-      // Clear ALL local storage (not just specific keys)
-      localStorage.clear();
-      sessionStorage.clear();
-  
-      // Reset state
-      setUser(null);
-      setIsLoggedIn(false);
-      setWeddingData(defaultWeddingData);
-      setWeddingWishes([]);
-      setSession(null);
-  
-      // Force a complete page reload to ensure clean state
-      window.location.replace("/");
+      
+      // Use React Router navigation properly
+      navigate("/", { replace: true });
+      
     } catch (error) {
       console.error("Logout error:", error);
-      // Force cleanup even if there's an error
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace("/");
+      // Force cleanup on any error
+      clearAuthLocalStorage();
+      sessionStorage.removeItem("wedding_session");
+      loadInProgress.current = false;
+      wishesLoaded.current = false;
+      currentLoadedUserId.current = null;
+      
+      flushSync(() => {
+        setUser(null);
+        setIsLoggedIn(false);
+        setWeddingData(defaultWeddingData);
+        setWeddingWishes([]);
+        setSession(null);
+        setIsAuthInitialized(true);
+        setGlobalLoading(false);
+      });
+      
+      navigate("/", { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   /* -------- Register -------- */
   const register = useCallback(
-    async (email: string, password: string, userData: Partial<AuthUser> = {}) => {
+    async (email: string, password: string, userData?: Partial<AuthUser>) => {
       try {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
@@ -705,9 +735,9 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
             {
               user_id: data.user.id,
               email,
-              bride_name: userData.bride_name || "",
-              groom_name: userData.groom_name || "",
-              phone_number: userData.phone_number || "",
+              bride_name: userData?.bride_name || "",
+              groom_name: userData?.groom_name || "",
+              phone_number: userData?.phone_number || "",
             },
           ]);
         if (profileError) throw new Error(`Profile insertion failed: ${profileError.message}`);
@@ -716,9 +746,9 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
           id: data.user.id,
           email: data.user.email || email,
           isAuthenticated: true,
-          bride_name: userData.bride_name || "",
-          groom_name: userData.groom_name || "",
-          phone_number: userData.phone_number || "",
+          bride_name: userData?.bride_name || "",
+          groom_name: userData?.groom_name || "",
+          phone_number: userData?.phone_number || "",
           access_token: data.session?.access_token || "",
           refresh_token: data.session?.refresh_token || "",
         };
@@ -731,32 +761,51 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
         return { user: authUser, error: null };
       } catch (error) {
         console.error("Registration error:", error);
-        toast.error("Registration failed. Please try again.");
-        return { user: null, error };
+        toast({
+          title: "Error",
+          description: "Registration failed. Please try again.",
+          variant: "destructive",
+        });
+        return {
+          user: null,
+          error: error instanceof Error ? error.message : "Registration failed",
+        };
       }
     },
-    [loadWeddingData]
+    [loadWeddingData, toast]
   );
 
   /* -------- Password Reset -------- */
-  const resetPassword = useCallback(async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
-      toast.success("Password reset email sent!");
-      return { error: null };
-    } catch (error) {
-      console.error("Password reset error:", error);
-      toast.error("Failed to send password reset email");
-      return { error };
-    }
-  }, []);
+  const resetPassword = useCallback(
+    async (email: string) => {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+        
+        // Fix: Replace toast.success with shadcn/ui toast
+        toast({
+          title: "Success",
+          description: "Password reset email sent!",
+        });
+        return { error: null };
+      } catch (error: any) {
+        // Fix: Replace toast.error with shadcn/ui toast
+        toast({
+          title: "Error",
+          description: "Failed to send password reset email",
+          variant: "destructive",
+        });
+        return { error: error.message };
+      }
+    },
+    [toast]
+  );
 
   /* -------- Update Profile -------- */
   const updateProfile = useCallback(
-    async (updates: Partial<AuthUser>) => {
+    async (profileData: Partial<AuthUser>) => {
       try {
-        const { data, error } = await supabase.auth.updateUser({ data: updates });
+        const { data, error } = await supabase.auth.updateUser({ data: profileData });
         if (error) throw error;
         if (!data.user) throw new Error("User not returned after update");
 
@@ -764,17 +813,26 @@ export const WeddingProvider: React.FC<ProviderProps> = ({ children }) => {
           prev
             ? {
                 ...prev,
-                ...updates,
+                ...profileData,
                 updated_at: new Date().toISOString(),
               }
             : null
         );
 
-        toast.success("Profile updated successfully!");
+        // Fix: Replace toast.success with shadcn/ui toast
+        toast({
+          title: "Success",
+          description: "Profile updated successfully!",
+        });
         return { user: data.user, error: null };
       } catch (error) {
         console.error("Profile update error:", error);
-        toast.error("Failed to update profile");
+        // Fix: Replace toast.error with shadcn/ui toast
+        toast({
+          title: "Error",
+          description: "Failed to update profile",
+          variant: "destructive",
+        });
         return { user: null, error };
       }
     },
