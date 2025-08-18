@@ -1,6 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@/types/wedding";
+import type { AuthUser } from "@/types/wedding";
 
 const convertToWebp = (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
@@ -37,7 +37,7 @@ const convertToWebp = (file: File): Promise<File> => {
 
 const uploadImage = async (
     file: File,
-    user: User,
+    user: AuthUser,
     name: string,
 ): Promise<string | null> => {
     const webpFile = await convertToWebp(file);
@@ -64,6 +64,50 @@ const uploadImage = async (
     });
 
     const { data } = supabase.storage.from("images").getPublicUrl(imagePath);
+    console.log("data: ", data);
+
+
+    if (!data.publicUrl) {
+        toast({
+            title: "Failed to retrieve load Image!",
+            variant: "destructive",
+        });
+        return null;
+    }
+
+    return `${data.publicUrl}?t=${Date.now()}`;
+};
+
+export const uploadHeroOrStoryImage = async (
+    file: File,
+    user: AuthUser,
+    imageType: 'hero_image' | 'story_image',
+): Promise<string | null> => {
+    const webpFile = await convertToWebp(file);
+    const imagePath = `user_uploads/${user.id}/${imageType}.webp`;
+    const { error } = await supabase.storage
+        .from("images")
+        .upload(imagePath, webpFile, {
+            upsert: true,
+        });
+
+    if (error) {
+        console.log("Error Uploading image: ", error.message);
+        toast({
+            title: "Failed to upload image",
+            description: error.message,
+            variant: "destructive",
+        });
+        return null;
+    }
+
+    toast({
+        title: "Image uploaded Successfully!",
+        description: "Please wait few seconds to see the effect.",
+    });
+
+    const { data } = supabase.storage.from("images").getPublicUrl(imagePath);
+    console.log("data: ", data);
 
     if (!data.publicUrl) {
         toast({

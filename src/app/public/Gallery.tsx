@@ -7,35 +7,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-// Dynamically import all images from cards subfolders
-const imageModules = import.meta.glob('@/assets/cards/*/*.{jpg,png,jpeg,svg}', { eager: true, import: 'default' });
-
-// Group images by folder (model)
-const groupedTemplates: Record<string, { images: { src: string; fileName: string }[]; category: string; price: string; popular: boolean; description: string }> = {};
-Object.entries(imageModules).forEach(([path, src]) => {
-  const match = path.match(/cards\/(\d+)\/(.+)$/);
-  const model = match ? match[1] : 'Unknown';
-  const filename = match ? match[2] : 'Image';
-  if (!groupedTemplates[model]) {
-    groupedTemplates[model] = {
-      images: [],
-      category: model,
-      price: '₹15',
-      popular: false,
-      description: `Model ${model}`,
-    };
-  }
-  groupedTemplates[model].images.push({ src: src as string, fileName: filename });
-});
-
-const templates = Object.entries(groupedTemplates).map(([model, data], idx) => ({
-  id: idx + 1,
-  name: `Model ${model}`,
-  ...data,
-}));
-
-const categories = ['All', ...Array.from(new Set(templates.map(t => t.category)))];
-
 // Define the interface for invitation card data from Supabase
 interface InvitationCard {
   id: string;

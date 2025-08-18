@@ -1,6 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2, X } from 'lucide-react';
+import useWedding from '@/hooks/useWedding';
+import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { uploadImage} from '@/utils/UploadImage';
+import  uploadHeroOrStoryImage  from '@/utils/UploadImage';
 
 // Helper component for text inputs
 export const TextInput = ({ label, value, onChange, onKeyDown, placeholder, type = "text" }: {
@@ -77,50 +91,159 @@ export const ToggleSwitch = ({ label, checked, onChange }: {
 );
 
 // Helper component for image upload
-export const ImageUpload = ({ label, value, onChange }: {
+// Update the ImageUpload component
+export const ImageUpload = ({ label, value, onChange, galleryIndex, imageType }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-}) => (
-  <div className="space-y-1">
-    <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">{label}</label>
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-purple-400 hover:bg-purple-50/30 transition-all duration-200">
-      {value ? (
-        <div className="space-y-2">
-          <img src={value} alt="Preview" className="w-full h-24 object-cover rounded-lg shadow-sm" />
-          <button
-            onClick={() => onChange('')}
-            className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
-          >
-            Remove Image
-          </button>
+  galleryIndex?: number;
+  imageType?: 'hero_image' | 'story_image'; // Add this prop
+}) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const { user, updateGalleryImage } = useWedding();
+
+  const handleFileUpload = async (file: File) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to upload images",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      if (typeof galleryIndex === 'number') {
+        // If galleryIndex is provided, update the gallery array in web_data
+        await updateGalleryImage(file, null, galleryIndex);
+        
+        console.log("Updated galleryIndex data:", galleryIndex);
+        toast({
+          title: "Gallery image updated successfully!",
+          description: "The image has been added to your gallery.",
+        });
+      } else if (imageType) {
+        // For hero and story images, use the specialized upload function
+        const imageUrl = await uploadHeroOrStoryImage(file, user, imageType);
+        
+        if (imageUrl) {
+          onChange(imageUrl);
+          
+          toast({
+            title: "Image uploaded successfully!",
+            description: `The ${imageType.replace('_', ' ')} has been updated.`,
+          });
+        }
+      } else {
+        // For other form fields (non-gallery images), use the direct upload
+        const uniqueName = `form_${Date.now()}_${crypto.randomUUID()}`;
+        const imageUrl = await uploadImage(file, user, uniqueName);
+
+        if (imageUrl) {
+          onChange(imageUrl);
+          
+          toast({
+            title: "Image uploaded successfully!",
+            description: "The image URL has been updated.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const confirmRemoveImage = () => {
+    onChange('');
+    setShowConfirmDialog(false);
+  };
+
+  return (
+    <>
+      <div className="space-y-1">
+        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">{label}</label>
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-purple-400 hover:bg-purple-50/30 transition-all duration-200">
+          {value ? (
+            <div className="space-y-2">
+              <img src={value} alt="Preview" className="w-full h-24 object-cover rounded-lg shadow-sm" />
+              <button
+                onClick={handleRemoveImage}
+                disabled={isUploading}
+                className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-medium transition-colors disabled:opacity-50"
+              >
+                <X className="w-3 h-3" />
+                Remove ImageimageUrl
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {isUploading ? (
+                <div className="flex flex-col items-center space-y-2">
+                  <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                  <p className="text-xs text-gray-500">Uploading to gallery...</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-6 h-6 text-gray-400 mx-auto" />
+                  <p className="text-xs text-gray-500">Click to upload image to gallery</p>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFileUpload(file);
+                  }
+                }}
+                disabled={isUploading}
+                className="hidden"
+                id={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
+              />
+              <label
+                htmlFor={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
+                className={cn(
+                  "cursor-pointer text-purple-600 hover:text-purple-800 text-xs font-medium transition-colors",
+                  isUploading && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                {isUploading ? 'Uploading...' : 'Choose File'}
+              </label>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="space-y-2">
-          <Upload className="w-6 h-6 text-gray-400 mx-auto" />
-          <p className="text-xs text-gray-500">Click to upload image</p>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                // In a real app, you'd upload this to a server
-                const url = URL.createObjectURL(file);
-                onChange(url);
-              }
-            }}
-            className="hidden"
-            id={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
-          />
-          <label
-            htmlFor={`upload-${label.replace(/\s+/g, '-').toLowerCase()}`}
-            className="cursor-pointer text-purple-600 hover:text-purple-800 text-xs font-medium transition-colors"
-          >
-            Choose File
-          </label>
-        </div>
-      )}
-    </div>
-  </div>
-);
+      </div>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Image</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this image? This action cannot be undone and the image will be permanently deleted from your gallery.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemoveImage} className="bg-red-600 hover:bg-red-700">
+              Remove Image
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
