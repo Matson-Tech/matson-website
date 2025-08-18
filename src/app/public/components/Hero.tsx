@@ -32,7 +32,7 @@ const Hero = () => {
       {/* Background video for all devices */}
       <video
         className="absolute inset-0 w-full h-full object-cover z-0"
-        src={"/src/app/public/components/animations/wedding_video.mp4"}
+        src={"https://kzhbmjygrzjardgruunp.supabase.co/storage/v1/object/public/wedding_card/Untitled%20folder/Timeline%201.webm"}
         autoPlay
         loop
         muted
