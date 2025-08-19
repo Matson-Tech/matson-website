@@ -26,10 +26,11 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative h-[90vh] w-full overflow-hidden select-none">
-      {/* Background video */}
+    <section className="relative w-full overflow-hidden select-none min-h-[600px] sm:min-h-[700px] md:min-h-[800px]">
+      
+      {/* Full background video for desktop and tablets */}
       <video
-        className="absolute inset-0 w-full h-full object-cover brightness-90"
+        className="hidden sm:block absolute inset-0 w-full h-full object-cover z-0"
         src={"https://kzhbmjygrzjardgruunp.supabase.co/storage/v1/object/public/wedding_card/Untitled%20folder/Timeline%201.webm"}
         autoPlay
         loop
@@ -38,47 +39,56 @@ const Hero = () => {
       >
         Your browser does not support the video tag.
       </video>
+      
+      {/* Overlay for full screen video */}
+      <div className="hidden sm:block absolute inset-0 bg-black/50 z-0"></div>
 
-      {/* Dark gradient overlay for better text visibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10"></div>
-
-      {/* Content anchored at bottom center */}
-      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-20 max-w-4xl w-full px-6 text-center">
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-white font-semibold leading-tight mb-4 drop-shadow-lg">
-          Wedding planning starts here
-        </h1>
-        <p className="text-white/90 max-w-3xl mx-auto text-base sm:text-lg md:text-xl mb-8 font-light drop-shadow-md">
-          From beautiful invitation templates and wedding websites to full planning services — Matson is here for all the days along the way
-        </p>
-        <Link to="/login">
-          <Button
-            size="lg"
-            className="
-              bg-white text-black font-semibold px-12 py-4 rounded-full shadow-lg 
-              hover:bg-gray-100 transition-all duration-300
-              focus:outline-none focus:ring-4 focus:ring-white/50
-              active:scale-95 transform
-              inline-block
-            "
-          >
-            Get Started
-          </Button>
-        </Link>
+      {/* Mobile view: square video box at top */}
+      <div className="sm:hidden relative w-full max-w-[400px] aspect-square mx-auto overflow-hidden rounded-xl shadow-lg">
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          src={"https://kzhbmjygrzjardgruunp.supabase.co/storage/v1/object/public/wedding_card/Untitled%20folder/Timeline%201.webm"}
+          autoPlay
+          loop
+          muted
+          playsInline
+        >
+          Your browser does not support the video tag.
+        </video>
       </div>
 
-      {/* Scroll prompt at bottom center */}
+      {/* Text content below video on mobile, and over video on larger screens */}
+      <div className="relative z-10 container mx-auto px-4 mt-6 sm:mt-0 text-center w-full max-w-5xl">
+        <h1 className="font-serif text-4xl md:text-7xl font-medium mb-4 leading-tight text-matson-black sm:text-white">
+          Wedding planning starts here
+        </h1>
+        <p className="text-lg md:text-2xl mb-8 font-light leading-relaxed text-matson-black/90 sm:text-white/90 max-w-3xl mx-auto">
+          From beautiful invitation templates and wedding websites to full planning services — Matson is here for all the days along the way
+        </p>
+        <div className="flex justify-center">
+          <Link to="/login">
+            <Button
+              size="lg"
+              className="border-2 border-matson-black text-matson-black hover:bg-matson-black hover:text-white text-xl px-12 py-4 rounded-full font-medium bg-transparent sm:border-white sm:text-white sm:hover:bg-white sm:hover:text-matson-black transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              Get Started
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Animated scroll prompt */}
       {showScrollPrompt && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
-          <div className="flex flex-col items-center space-y-1">
-            <div className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center bg-white/20 backdrop-blur-md">
-              <ChevronDown className="w-6 h-6 text-white" />
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce transition-opacity duration-500">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-10 h-10 border-2 border-white/70 rounded-full flex items-center justify-center bg-white/10 backdrop-blur-sm">
+              <ChevronDown className="w-5 h-5 text-white" />
             </div>
-            <span className="hidden sm:block text-white/80 text-sm font-medium drop-shadow-sm">
-              Scroll down
-            </span>
+            <span className="text-white/80 text-sm font-medium hidden sm:block">Scroll down</span>
           </div>
         </div>
       )}
+
     </section>
   );
 };
