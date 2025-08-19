@@ -47,7 +47,7 @@ const Hero = () => {
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-white font-semibold leading-tight mb-4 drop-shadow-lg">
           Wedding planning starts here
         </h1>
-<p className="text-white/90 max-w-3xl mx-auto text-sm sm:text-base md:text-lg mb-8 font-light drop-shadow-md">
+        <p className="text-white/90 max-w-3xl mx-auto text-base sm:text-lg md:text-xl mb-8 font-light drop-shadow-md">
           From beautiful invitation templates and wedding websites to full planning services — Matson is here for all the days along the way
         </p>
         <Link to="/login">
