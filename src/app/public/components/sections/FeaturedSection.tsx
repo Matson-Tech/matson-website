@@ -2,22 +2,12 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Heart, Globe, ArrowRight } from 'lucide-react';
+import { Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { SeasonalHoverCards } from "@/components/ui/seasonal-hover-cards";
 
-import { SeasonalHoverCards } from "@/components/ui/seasonal-hover-cards"
-
-// Define the interface for invitation card data from Supabase
-interface InvitationCard {
-  card_name: string;
-  description: string | null;
-  image_path: string[] | null;
-  price: number;
-}
-
-// Define card structure for UI
 interface CardData {
   title: string;
   description: string;
@@ -25,206 +15,202 @@ interface CardData {
   subtitle: string;
 }
 
+const dummyWeddingWebsites: CardData[] = [
+  {
+    title: "Classic Romance",
+    description: "A timeless template with elegant fonts and soft backgrounds for a romantic touch.",
+    imageSrc: "https://kzhbmjygrzjardgruunp.supabase.co/storage/v1/object/public/wedding_card/wedding-website/form_1755518130382_668c605b-b9ba-46cb-981c-7cb94970f1db.webp",
+    subtitle: "Romantic Theme",
+  },
+  {
+    title: "Modern Minimalist",
+    description: "Crisp lines and plenty of white space give this template a chic, modern vibe.",
+    imageSrc: "https://kzhbmjygrzjardgruunp.supabase.co/storage/v1/object/public/wedding_card/wedding-website/form_1755518155153_cbc031b1-699a-4643-a365-b05f3083488e.webp",
+    subtitle: "Minimal Theme",
+  },
+  {
+    title: "Rustic Charm",
+    description: "Earthy tones and wood textures make this template perfect for rustic outdoor weddings.",
+    imageSrc: "https://kzhbmjygrzjardgruunp.supabase.co/storage/v1/object/public/wedding_card/wedding-website/form_1755518168134_80674f70-5956-4ffd-9c68-2e9ff46095d7.webp",
+    subtitle: "Rustic Theme",
+  },
+];
+
+const extractImageUrl = (imagePath: any): string => {
+  const fallbackImage = '/placeholder.svg';
+
+  if (!imagePath || !Array.isArray(imagePath) || imagePath.length === 0) {
+    return fallbackImage;
+  }
+
+  try {
+    const firstImage = imagePath[0];
+
+    if (typeof firstImage === 'string') {
+      try {
+        const parsed = JSON.parse(firstImage);
+        return parsed.url || fallbackImage;
+      } catch {
+        return firstImage || fallbackImage;
+      }
+    } else if (typeof firstImage === 'object' && firstImage !== null) {
+      return firstImage.url || fallbackImage;
+    }
+
+    return fallbackImage;
+  } catch (error) {
+    console.warn('Error extracting image URL:', error);
+    return fallbackImage;
+  }
+};
+
 const FeaturedSection = () => {
   const [cards, setCards] = useState<CardData[]>([]);
+  const [websites, setWebsites] = useState<CardData[]>(dummyWeddingWebsites);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
 
-  // Fetch invitation cards from Supabase
   useEffect(() => {
-    const fetchFeaturedCards = async () => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const fetchCards = async () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
           .from('invitation_card')
           .select('card_name, description, image_path, price')
-          .limit(3) // Only get 3 cards for featured section
+          .limit(3)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching featured cards:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load featured cards. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
+        if (error) throw error;
 
         if (data) {
-          // Transform database data to card format
-          const transformedCards: CardData[] = data.map((card: InvitationCard, index: number) => {
-            // Handle image_path - parse JSON objects to extract URLs
-            let imageSrc = '/placeholder.svg'; // Default fallback
-            
-            if (card.image_path && Array.isArray(card.image_path) && card.image_path.length > 0) {
-              try {
-                // Get the first image from the array
-                const firstImageData = card.image_path[0];
-                const parsedData = typeof firstImageData === 'string' ? JSON.parse(firstImageData) : firstImageData;
-                imageSrc = parsedData.url || '/placeholder.svg';
-              } catch (error) {
-                console.error('Error parsing image data:', error);
-                imageSrc = '/placeholder.svg';
-              }
-            }
-
-            return {
-              title: card.card_name,
-              description: card.description || `${card.card_name} invitation template`,
-              imageSrc,
-              subtitle: `₹${card.price}`
-            };
-          });
-
+          const transformedCards: CardData[] = data.map((card) => ({
+            title: card.card_name || 'Untitled Card',
+            description: card.description || `${card.card_name || 'Wedding'} invitation template`,
+            imageSrc: extractImageUrl(card.image_path),
+            subtitle: card.price ? `₹${card.price}` : 'Price on request',
+          }));
           setCards(transformedCards);
         }
       } catch (error) {
-        console.error('Error fetching featured cards:', error);
+        console.error('Error fetching cards:', error);
         toast({
           title: "Error",
-          description: "An unexpected error occurred while loading featured cards.",
+          description: "Failed to load featured cards. Please try again.",
           variant: "destructive",
         });
       } finally {
         setLoading(false);
       }
     };
-
-    fetchFeaturedCards();
+    fetchCards();
   }, [toast]);
 
-  // Show loading state
+  const getCardsToDisplay = (arr: CardData[]) => (isMobile ? arr.slice(0, 1) : arr);
+
   if (loading) {
     return (
-      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-12 gap-8 items-stretch">
-            <motion.div 
-              className="lg:col-span-4"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <div className="h-full flex items-center">
-                <Card className="p-8 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 h-full flex items-center">
-                  <div className="text-center lg:text-left">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, delay: 0.2 }}
-                      viewport={{ once: true }}
-                    >
-                      <Heart className="w-12 h-12 text-primary mx-auto lg:mx-0 mb-6" />
-                      <h3 className="text-2xl font-serif font-medium mb-4 text-foreground">
-                        Everything you need to plan the wedding you want.
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        For all the days along the way. From the perfect invitation to your dream wedding website.
-                      </p>
-                    </motion.div>
-                  </div>
-                </Card>
-              </div>
-            </motion.div>
-            
-            <div className="lg:col-span-8">
-              <div className="grid grid-rows-2 gap-6 h-full">
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                </div>
-                <div className="flex items-center justify-center">
-                  <p className="text-muted-foreground">Loading featured templates...</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <section className="py-12 sm:py-16 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-4 text-center">
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-sm sm:text-base text-muted-foreground">Loading featured templates...</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-12 gap-8 items-stretch">
-          {/* Left Inspirational Message Box */}
-          <motion.div 
-            className="lg:col-span-4"
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+        <div className={`grid gap-6 sm:gap-8 ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-12 items-stretch'}`}>
+          {/* Inspirational Card */}
+          <motion.div
+            className={`${isMobile ? '' : 'lg:col-span-4'} order-1`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <div className="h-full flex items-center">
-              <Card className="p-8 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 h-full flex items-center">
-                <div className="text-center lg:text-left">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    viewport={{ once: true }}
-                  >
-                    <Heart className="w-12 h-12 text-primary mx-auto lg:mx-0 mb-6" />
-                    <h3 className="text-2xl font-serif font-medium mb-4 text-foreground">
-                      Everything you need to plan the wedding you want.
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      For all the days along the way. From the perfect invitation to your dream wedding website.
-                    </p>
-                  </motion.div>
-                </div>
-              </Card>
-            </div>
-          </motion.div>
-   
-          {/* Right Feature Modules */}
-          <div className="lg:col-span-8">
-            <div className="grid grid-rows-2 gap-6 h-full">
-              
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              viewport={{ once: true }}
-              className="group relative"
+            <Card
+              className="p-8 sm:p-10 bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 rounded-3xl shadow-lg hover:shadow-xl transition-shadow duration-300 h-[520px] lg:h-[670px] flex flex-col justify-between"
             >
-              <SeasonalHoverCards cards={cards} />
-
-              {/* Floating View More Button */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                viewport={{ once: true }}
-                className="absolute top-4 right-4 z-10"
-              >
-                <Link to="/gallery">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="group bg-white/90 backdrop-blur-sm hover:bg-primary hover:text-white border-primary/30 hover:border-primary transition-all duration-300 px-4 py-2 shadow-lg hover:shadow-xl"
+              <div className="text-center lg:text-left w-full flex flex-col justify-between h-full">
+                <div>
+                  <Heart className="w-10 h-10 sm:w-14 sm:h-14 text-primary mx-auto lg:mx-0 mb-6" />
+                  <h3 className="text-xl sm:text-3xl font-serif font-semibold mb-4 leading-tight">
+                    Everything you need to plan the wedding you want.
+                  </h3>
+                  <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-lg mx-auto lg:mx-0">
+                    From the perfect invitation card to your dream wedding website.
+                  </p>
+                </div>
+                <div className="mt-6">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="w-full sm:w-auto px-8 py-3 text-base font-semibold rounded-full shadow-md hover:shadow-lg transition-shadow duration-300"
                   >
-                    View More
-                    <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform duration-300" />
+                    Start Planning
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Feature Modules */}
+          <div className={`${isMobile ? 'space-y-6' : 'lg:col-span-8 grid grid-rows-2 gap-6'} order-2`}>
+            {/* Wedding Websites */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <SeasonalHoverCards cards={getCardsToDisplay(websites)} />
+              <div className={`${isMobile ? 'mt-3' : 'absolute top-4 right-4'}`}>
+                <Link to="/website">
+                  <Button
+                    variant={isMobile ? "default" : "outline"}
+                    size={isMobile ? "lg" : "sm"}
+                    className={`${isMobile ? 'w-full py-3 rounded-full text-sm font-medium' : 'bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl text-xs sm:text-sm'}`}
+                  >
+                    {isMobile ? "Explore Websites" : "View More"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-              </motion.div>
+              </div>
             </motion.div>
 
-              {/* Bottom: Wedding Website */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                viewport={{ once: true }}
-                className="group"
-              >
-                <SeasonalHoverCards cards={cards} />
-              </motion.div>
-
-            </div>
+            {/* Wedding Cards */}
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <SeasonalHoverCards cards={getCardsToDisplay(cards)} />
+              <div className={`${isMobile ? 'mt-3' : 'absolute top-4 right-4'}`}>
+                <Link to="/gallery">
+                  <Button
+                    variant={isMobile ? "default" : "outline"}
+                    size={isMobile ? "lg" : "sm"}
+                    className={`${isMobile ? 'w-full py-3 rounded-full text-sm font-medium' : 'bg-white/90 backdrop-blur-sm shadow-lg hover:shadow-xl text-xs sm:text-sm'}`}
+                  >
+                    {isMobile ? "Explore Cards" : "View More"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
