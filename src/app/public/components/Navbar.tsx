@@ -153,9 +153,9 @@ const Navbar = () => {
           <div className="flex-1 flex justify-center">
             <Link to="/" className="flex items-center group">
               <img 
-                src="/lovable-uploads/dc1e0084-194d-4369-b13d-34b7f7d3629e.png" 
+                src="/lovable-uploads/matsonLogo.png" 
                 alt="Matson Cards" 
-                className="h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-200" 
+                className="h-7 w-auto object-contain group-hover:scale-105 transition-transform duration-200" 
               />
             </Link>
           </div>
