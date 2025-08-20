@@ -2,7 +2,10 @@ import { Heart, MapPin, Phone, Mail, Globe, Instagram, Facebook, ArrowRight } fr
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import matsonIcon from '../../../assets/matson-icon.png';
+// Replace this line:
+// import matsonIcon from '../../../assets/matson-icon.png';
+// With this:
+const matsonIcon = '/lovable-uploads/matsonLogo.webp';
 
 const Footer = () => {
   return (
