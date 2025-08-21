@@ -13,15 +13,23 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://www.matson.app" />
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Matson Celebration Studio - Beautiful Wedding Invitations & Wedding Websites" />
     <meta property="og:description" content="Create stunning digital wedding invitations and personalized wedding websites with Matson Celebration Studio. Where every invitation begins with a love story." />
-    <meta property="og:image" content="https://www.matson.app/lovable-uploads/matsonLogoOg.png" />
-    <meta property="og:image:alt" content="Matson Celebration Studio Logo - Wedding Invitation Platform" />
     <meta property="og:url" content="https://www.matson.app/" />
     <meta property="og:site_name" content="Matson Celebration Studio" />
     <meta property="og:locale" content="en_IN" />
+    
+    <!-- WhatsApp-optimized image tags -->
+    <meta property="og:image" content="https://www.matson.app/lovable-uploads/matsonLogoOg.png" itemprop="image" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Matson Celebration Studio Logo - Wedding Invitation Platform" />
+    
+    <!-- Additional WhatsApp compatibility -->
+    <link itemprop="thumbnailUrl" href="https://www.matson.app/lovable-uploads/matsonLogoOg.png" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -29,7 +37,6 @@
     <meta name="twitter:description" content="Create stunning digital wedding invitations and personalized wedding websites. Where every invitation begins with a love story." />
     <meta name="twitter:image" content="https://www.matson.app/lovable-uploads/matsonLogoOg.png" />
     <meta name="twitter:image:alt" content="Matson Celebration Studio Logo - Wedding Invitation Platform" />
-    
     
     <!-- Additional SEO Meta Tags -->
     <meta name="theme-color" content="#f97316" />
@@ -50,7 +57,7 @@
         "url": "https://www.matson.app",
         "logo": "https://www.matson.app/lovable-uploads/matsonLogoOg.png",
         "sameAs": [
-            "https://instagram.com/matson_celebrations",
+            "https://www.instagram.com/matson_cards_"
         ],
         "address": {
             "@type": "PostalAddress",
@@ -64,5 +71,10 @@
 <body>
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
+    
+    <!-- WhatsApp additional schema markup -->
+    <span itemprop="image" itemscope itemtype="image/png">
+        <link itemprop="url" href="https://www.matson.app/lovable-uploads/matsonLogoOg.png">
+    </span>
 </body>
 </html>
